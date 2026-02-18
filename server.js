@@ -1,109 +1,103 @@
-const express = require('express');
-const path = require('path');
-const db = require('./database');
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const db = require("./database");
 
 const app = express();
-const PORT = 3000;
 
-// Middleware
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static("public"));
 
-// API Routes
-
-// Signup
-app.post('/api/signup', (req, res) => {
-    const { username, password, team_name } = req.body;
-    const sql = 'INSERT INTO users (username, password, team_name) VALUES (?,?,?)';
-    db.run(sql, [username, password, team_name], function(err) {
-        if (err) {
-            res.status(400).json({ "error": err.message });
-            return;
-        }
-        res.json({
-            "message": "success",
-            "data": { id: this.lastID, username, team_name }
-        });
-    });
+app.get("/", (req, res) => {
+    res.redirect("./Auth/login.html");
 });
 
-// Login
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    const sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
-    db.get(sql, [username, password], (err, row) => {
-        if (err) {
-            res.status(400).json({ "error": err.message });
-            return;
-        }
-        if (row) {
-            res.json({
-                "message": "success",
-                "data": { id: row.id, username: row.username, team_name: row.team_name }
-            });
-        } else {
-            res.status(401).json({ "message": "Invalid credentials" });
-        }
-    });
-});
+app.post("/login", (req, res) => {
+    const { team_name, password } = req.body;
 
-// Get all challenges
-app.get('/api/challenges', (req, res) => {
-    const sql = 'SELECT * FROM challenges';
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            res.status(400).json({ "error": err.message });
-            return;
-        }
-        res.json({
-            "message": "success",
-            "data": rows
-        });
-    });
-});
-
-// Save design (placeholder for now, could save JSON to DB)
-app.post('/api/save-design', (req, res) => {
-    const { designData, userId, username, team_name } = req.body;
-    const timestamp = new Date().toISOString();
-
-    // Parse design data to extract useful info
-    let parsedDesign = {};
-    let elementCount = 0;
-    try {
-        parsedDesign = JSON.parse(designData);
-        // Count elements (children of the first layer, minus transformer)
-        if (parsedDesign.children && parsedDesign.children[0] && parsedDesign.children[0].children) {
-            elementCount = parsedDesign.children[0].children.filter(c => c.className !== 'Transformer').length;
-        }
-    } catch (e) {
-        parsedDesign = designData;
+    if (!team_name || !password) {
+        return res.status(400).json({ message: "All fields required" });
     }
 
-    // Pretty console log
-    console.log('\n========================================');
-    console.log('  📤 DESIGN SUBMISSION RECEIVED');
-    console.log('========================================');
-    console.log(`  👤 User     : ${username || 'Unknown'} (ID: ${userId || 'N/A'})`);
-    console.log(`  👥 Team     : ${team_name || 'N/A'}`);
-    console.log(`  🕐 Time     : ${timestamp}`);
-    console.log(`  🎨 Elements : ${elementCount}`);
-    console.log('========================================\n');
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(password)) {
+        return res.status(400).json({
+            message: "Phone number must be 10 digits"
+        });
+    }
 
-    res.json({
-        status: "success",
-        message: "Design saved successfully",
-        data: {
-            userId: userId || null,
-            username: username || null,
-            team_name: team_name || null,
-            submittedAt: timestamp,
-            elementCount: elementCount
+    const now = Date.now();
+
+    // Check if team already exists
+    db.get(
+        "SELECT * FROM teams WHERE team_name = ?",
+        [team_name],
+        (err, team) => {
+
+            if (err) {
+                return res.status(500).json({ message: "Database error" });
+            }
+
+            // 🔵 If team exists
+            if (team) {
+
+                if (team.password !== password) {
+                    return res.status(401).json({
+                        message: "Incorrect phone number"
+                    });
+                }
+
+                // Set start_time if not already set
+                if (!team.start_time) {
+                    db.run(
+                        "UPDATE teams SET start_time = ? WHERE id = ?",
+                        [now, team.id]
+                    );
+                    team.start_time = now;
+                }
+
+                // Log login
+                db.run(
+                    "INSERT INTO login_logs (team_id, login_time) VALUES (?, ?)",
+                    [team.id, now]
+                );
+
+                return res.json({
+                    team_id: team.id,
+                    team_name: team.team_name,
+                    start_time: team.start_time
+                });
+            }
+
+            // 🟢 If team does NOT exist → Register automatically
+            db.run(
+                "INSERT INTO teams (team_name, password, start_time) VALUES (?, ?, ?)",
+                [team_name, password, now],
+                function (insertErr) {
+                    if (insertErr) {
+                        return res.status(500).json({ message: "Registration failed" });
+                    }
+
+                    const newTeamId = this.lastID;
+
+                    // Log login
+                    db.run(
+                        "INSERT INTO login_logs (team_id, login_time) VALUES (?, ?)",
+                        [newTeamId, now]
+                    );
+
+                    return res.json({
+                        team_id: newTeamId,
+                        team_name: team_name,
+                        start_time: now
+                    });
+                }
+            );
         }
-    });
+    );
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(3000, "0.0.0.0", () => {
+    console.log("Server running on port 3000");
 });

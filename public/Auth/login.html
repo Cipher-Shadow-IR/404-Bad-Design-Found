@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - 404 NOT FOUND</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root{
+  --bg:#0f1220;
+  --card:#171a2b;
+  --border:rgba(255,255,255,.08);
+  --primary:#7c6cff;
+  --primary2:#9b8cff;
+  --text:#f5f6ff;
+  --muted:#9aa0c5;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:'Outfit', sans-serif;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background: var(--bg);
+  overflow:hidden;
+  color:var(--text);
+}
+
+/* soft mesh glow */
+body::before,
+body::after{
+  content:"";
+  position:absolute;
+  width:500px;
+  height:500px;
+  border-radius:50%;
+  filter: blur(120px);
+  opacity:.25;
+}
+
+body::before{
+  background:#7c6cff;
+  top:-150px;
+  left:-150px;
+}
+
+body::after{
+  background:#3ad0ff;
+  bottom:-200px;
+  right:-150px;
+}
+
+.auth-container{
+  position:relative;
+  width:100%;
+  max-width:420px;
+  padding:3rem 2.5rem;
+  border-radius:20px;
+  background: var(--card);
+  border:1px solid var(--border);
+  box-shadow:0 30px 60px rgba(0,0,0,.45);
+  text-align:center;
+}
+
+.logo{
+  font-size:32px;
+  margin-bottom:12px;
+  color:var(--primary);
+}
+
+.auth-title{
+  font-size:1.8rem;
+  font-weight:600;
+  margin-bottom:2rem;
+  letter-spacing:.5px;
+}
+
+.form-group{
+  margin-bottom:1.3rem;
+  text-align:left;
+}
+
+.form-group label{
+  font-size:.8rem;
+  color:var(--muted);
+  margin-bottom:.4rem;
+  display:block;
+  letter-spacing:.5px;
+}
+
+.form-group input{
+  width:100%;
+  padding:.85rem 1rem;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#101325;
+  color:var(--text);
+  font-size:.95rem;
+  transition:.2s ease;
+}
+
+.form-group input:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(124,108,255,.25);
+}
+
+.auth-btn{
+  width:100%;
+  padding:.9rem;
+  border:none;
+  border-radius:12px;
+  margin-top:.5rem;
+  font-weight:600;
+  font-size:1rem;
+  color:#fff;
+  cursor:pointer;
+  background:linear-gradient(90deg,var(--primary),var(--primary2));
+  transition:.2s ease;
+}
+
+.auth-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(124,108,255,.35);
+}
+
+.error-msg{
+  margin-top:1rem;
+  font-size:.85rem;
+  color:#ff6b6b;
+  min-height:18px;
+}
+
+.event-note{
+  margin-top:1.5rem;
+  font-size:.75rem;
+  color:var(--muted);
+  letter-spacing:.4px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="auth-container">
+    <div class="logo">
+        <i class="fa-solid fa-layer-group"></i>
+    </div>
+
+    <div class="auth-title">UI/UX Warriors</div>
+
+    <form id="login-form">
+        <div class="form-group">
+            <label>Team Name</label>
+            <input type="text" id="team_name" required>
+        </div>
+
+        <div class="form-group">
+            <label>10 Digit Phone Number</label>
+            <input type="tel" id="password" maxlength="10" required>
+        </div>
+
+        <button type="submit" class="auth-btn">
+            Enter Arena
+        </button>
+
+        <div class="error-msg" id="error"></div>
+    </form>
+
+    <div class="event-note">
+        Round 1 Duration: 20 Minutes
+    </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const team_name = document.getElementById('team_name').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const errorBox = document.getElementById('error');
+
+    const phoneRegex = /^[0-9]{10}$/;
+
+    if (!phoneRegex.test(password)) {
+        errorBox.innerText = "Phone number must be exactly 10 digits.";
+        return;
+    }
+
+    try {
+        const res = await fetch('/login', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({team_name,password})
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+            localStorage.setItem("team_id",data.team_id);
+            localStorage.setItem("team_name",data.team_name);
+            localStorage.setItem("start_time",data.start_time);
+            window.location.href="/builder.html";
+        }else{
+            errorBox.innerText=data.message||"Login failed";
+        }
+
+    }catch(err){
+        errorBox.innerText="Server error. Please try again.";
+    }
+});
+</script>
+
+</body>
+</html>
