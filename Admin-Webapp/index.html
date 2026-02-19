@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Submission Review</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — TechXtreme</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -11,9 +12,9 @@
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <h2 class="logo">TechXtreme Challenge </h2>
+    <h2 class="logo">TechXtreme<br><span>Admin Panel</span></h2>
     <nav>
-      <a class="active">Dashboard</a>
+      <a class="active">📊 Dashboard</a>
     </nav>
   </aside>
 
@@ -22,89 +23,266 @@
 
     <!-- Topbar -->
     <header class="topbar">
-      <h1>404 Not Found</h1>
+      <h1>404 Not Found — Admin</h1>
       <div class="admin">
-        <span>Admin</span>
-        <button class="logout">Logout</button>
+        <span class="admin-badge">🔑 Admin</span>
       </div>
     </header>
 
-    <!-- Page Title -->
+    <!-- Title Row -->
     <section class="title-row">
-      <div>
-        
+      <div></div>
+      <button class="refresh" id="btn-refresh" onclick="loadAll()">↻ Refresh Data</button>
+    </section>
+
+    <!-- Summary Cards -->
+    <section class="summary">
+      <div class="summary-card">
+        <h3>Total Teams</h3>
+        <p id="stat-total">—</p>
       </div>
-      <button class="refresh">Refresh Data</button>
+      <div class="summary-card submitted">
+        <h3>Submitted</h3>
+        <p id="stat-submitted">—</p>
+      </div>
+      <div class="summary-card pending">
+        <h3>Pending</h3>
+        <p id="stat-pending">—</p>
+      </div>
     </section>
 
     <!-- Table Section -->
     <section class="card">
       <div class="search-row">
-        <input placeholder="Search teams..." />
+        <input id="search-input" placeholder="🔍 Search teams..." oninput="filterTable()" />
       </div>
 
-      <table>
+      <div id="loading" class="loading">Loading teams...</div>
+      <div id="empty" class="empty" style="display:none">No teams found yet.</div>
+
+      <table id="teams-table" style="display:none">
         <thead>
           <tr>
-            <th>Team</th>
+            <th>#</th>
+            <th>Team Name</th>
             <th>Unlocked</th>
             <th>Time Taken</th>
-            <th>Preview</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
-
-        <tbody>
-          <tr>
-            <td>Alpha Squad</td>
-            <td>6 / 12 🔒</td>
-            <td>15:20</td>
-            <td><button class="view">View Design</button></td>
-          </tr>
-
-          <tr>
-            <td>Design Mavericks</td>
-            <td>6 / 12 🔒</td>
-            <td>18:50</td>
-            <td><button class="view">View Design</button></td>
-          </tr>
-
-          <tr>
-            <td>Pixel Pioneers</td>
-            <td>6 / 12 🔒</td>
-            <td>17:20</td>
-            <td><button class="view">View Design</button></td>
-          </tr>
-
-          <tr>
-            <td>Creative Coders</td>
-            <td>6 / 12 🔒</td>
-            <td>18:50</td>
-            <td><button class="view">View Design</button></td>
-          </tr>
-        </tbody>
+        <tbody id="teams-body"></tbody>
       </table>
-    </section>
-
-    <!-- Summary -->
-    <section class="summary">
-      <div class="summary-card">
-        <h3>Total Teams</h3>
-        <p>40</p>
-      </div>
-
-      <div class="summary-card">
-        <h3>Reviewed</h3>
-        <p>14</p>
-      </div>
-
-      <div class="summary-card">
-        <h3>Pending</h3>
-        <p>6</p>
-      </div>
     </section>
 
   </main>
 </div>
+
+<!-- Team Detail Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-content">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    <h2 id="modal-title">Team Details</h2>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// 🔗 Points to the Admin-Webapp server (which reads from the shared database)
+const API = "http://localhost:4000";
+let allTeams = [];
+
+// ====== LOAD ALL DATA ======
+async function loadAll() {
+  document.getElementById("btn-refresh").textContent = "↻ Refreshing...";
+  try {
+    await Promise.all([loadTeams(), loadStats()]);
+  } catch(e) {
+    console.error("Server might not be running:", e);
+  }
+  document.getElementById("btn-refresh").textContent = "↻ Refresh Data";
+}
+
+// ====== LOAD TEAMS ======
+async function loadTeams() {
+  const loading = document.getElementById("loading");
+  const empty = document.getElementById("empty");
+  const table = document.getElementById("teams-table");
+
+  loading.style.display = "block";
+  empty.style.display = "none";
+  table.style.display = "none";
+
+  try {
+    const res = await fetch(`${API}/admin/api/teams`);
+    allTeams = await res.json();
+
+    if (allTeams.length === 0) {
+      loading.style.display = "none";
+      empty.style.display = "block";
+      return;
+    }
+
+    renderTable(allTeams);
+    loading.style.display = "none";
+    table.style.display = "table";
+  } catch (e) {
+    loading.textContent = "⚠ Could not connect to server. Make sure the 404-Not-Found-Webapp server is running on port 3000.";
+    console.error(e);
+  }
+}
+
+// ====== RENDER TABLE ======
+function renderTable(teams) {
+  const tbody = document.getElementById("teams-body");
+  tbody.innerHTML = "";
+
+  teams.forEach((t, i) => {
+    const tr = document.createElement("tr");
+
+    // Format time taken
+    let timeTaken = "—";
+    if (t.time_taken) {
+      const mins = Math.floor(t.time_taken / 60000);
+      const secs = Math.floor((t.time_taken % 60000) / 1000);
+      timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    } else if (t.start_time) {
+      const elapsed = Date.now() - t.start_time;
+      const mins = Math.floor(elapsed / 60000);
+      const secs = Math.floor((elapsed % 60000) / 1000);
+      timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} (live)`;
+    }
+
+    const statusClass = t.has_submission ? "badge-submitted" : "badge-pending";
+    const statusText = t.has_submission ? "Submitted" : "Pending";
+
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td class="team-name-cell">${escapeHtml(t.team_name)}</td>
+      <td><span class="unlock-pill">${t.unlocked_count} unlocked</span></td>
+      <td>${timeTaken}</td>
+      <td><span class="badge ${statusClass}">${statusText}</span></td>
+      <td><button class="view" onclick="viewTeam(${t.id})">View Details</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ====== LOAD STATS ======
+async function loadStats() {
+  try {
+    const res = await fetch(`${API}/admin/api/stats`);
+    const stats = await res.json();
+    document.getElementById("stat-total").textContent = stats.total_teams;
+    document.getElementById("stat-submitted").textContent = stats.submitted;
+    document.getElementById("stat-pending").textContent = stats.pending;
+  } catch (e) {
+    console.error("Failed to load stats:", e);
+  }
+}
+
+// ====== SEARCH / FILTER ======
+function filterTable() {
+  const q = document.getElementById("search-input").value.toLowerCase();
+  const filtered = allTeams.filter(t => t.team_name.toLowerCase().includes(q));
+  renderTable(filtered);
+}
+
+// ====== VIEW TEAM DETAIL ======
+async function viewTeam(id) {
+  const modal = document.getElementById("modal");
+  const title = document.getElementById("modal-title");
+  const body = document.getElementById("modal-body");
+
+  title.textContent = "Loading...";
+  body.innerHTML = "<p>Fetching team details...</p>";
+  modal.classList.add("open");
+
+  try {
+    const res = await fetch(`${API}/admin/api/teams/${id}`);
+    const team = await res.json();
+
+    title.textContent = team.team_name;
+
+    let html = `
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Team ID</label>
+          <span>${team.id}</span>
+        </div>
+        <div class="detail-item">
+          <label>Created At</label>
+          <span>${team.created_at || "—"}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status</label>
+          <span class="badge ${team.submission ? 'badge-submitted' : 'badge-pending'}">
+            ${team.submission ? "Submitted" : "Pending"}
+          </span>
+        </div>
+      </div>
+
+      <h3>🔓 Unlocked Elements (${team.unlocks.length})</h3>
+      ${team.unlocks.length > 0
+        ? `<div class="unlock-list">${team.unlocks.map(u => `<span class="unlock-tag">${escapeHtml(u)}</span>`).join("")}</div>`
+        : `<p class="muted">No elements unlocked yet.</p>`
+      }
+
+      <h3>📝 Submission</h3>
+      ${team.submission
+        ? `<div class="submission-info">
+            <p><strong>Time Taken:</strong> ${formatMs(team.submission.time_taken)}</p>
+            <p><strong>Unlocked Count:</strong> ${team.submission.unlocked_count}</p>
+            <details>
+              <summary>View Layout JSON</summary>
+              <pre class="json-block">${escapeHtml(team.submission.layout_json)}</pre>
+            </details>
+           </div>`
+        : `<p class="muted">No submission yet.</p>`
+      }
+
+      <h3>🕐 Login History (${team.login_logs.length})</h3>
+      ${team.login_logs.length > 0
+        ? `<ul class="login-list">${team.login_logs.map(l => `<li>${new Date(l.login_time).toLocaleString()}</li>`).join("")}</ul>`
+        : `<p class="muted">No login records.</p>`
+      }
+    `;
+
+    body.innerHTML = html;
+  } catch (e) {
+    body.innerHTML = "<p>⚠ Failed to load team details.</p>";
+    console.error(e);
+  }
+}
+
+// ====== CLOSE MODAL ======
+function closeModal(e) {
+  if (e.target === document.getElementById("modal")) {
+    document.getElementById("modal").classList.remove("open");
+  }
+}
+
+// ====== HELPERS ======
+function escapeHtml(str) {
+  if (!str) return "";
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatMs(ms) {
+  if (!ms) return "—";
+  const mins = Math.floor(ms / 60000);
+  const secs = Math.floor((ms % 60000) / 1000);
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+// ====== INIT ======
+loadAll();
+
+// ====== AUTO-REFRESH every 10 seconds ======
+setInterval(loadAll, 10000);
+</script>
 
 </body>
 </html>
