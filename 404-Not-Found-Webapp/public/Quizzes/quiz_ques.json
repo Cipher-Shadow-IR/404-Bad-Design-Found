@@ -1,0 +1,366 @@
+{
+  "quiz_title": "UI/UX Scenario Based Quiz",
+  "total_questions": 30,
+  "questions": [
+    {
+      "id": 1,
+      "level": "easy",
+      "question": "A button is not clickable on a webpage. What is the most likely UI issue?",
+      "options": [
+        "Font size is small",
+        "Low contrast",
+        "Invisible overlapping element",
+        "Color mismatch"
+      ],
+      "answer": "Invisible overlapping element"
+    },
+    {
+      "id": 2,
+      "level": "easy",
+      "question": "Users are unable to find the Submit button on a form. What could be the reason?",
+      "options": [
+        "Fast loading speed",
+        "Poor visual hierarchy",
+        "Proper spacing",
+        "Good contrast"
+      ],
+      "answer": "Poor visual hierarchy"
+    },
+    {
+      "id": 3,
+      "level": "easy",
+      "question": "A form is too long and users abandon it frequently. What UX issue does this indicate?",
+      "options": [
+        "High cognitive load",
+        "Low accessibility",
+        "Server issue",
+        "Color problem"
+      ],
+      "answer": "High cognitive load"
+    },
+    {
+      "id": 4,
+      "level": "easy",
+      "question": "Users click on a logo expecting homepage navigation but nothing happens. Why?",
+      "options": [
+        "Mental model mismatch",
+        "CSS issue",
+        "SEO problem",
+        "Typography error"
+      ],
+      "answer": "Mental model mismatch"
+    },
+    {
+      "id": 5,
+      "level": "easy",
+      "question": "CTA button has the same color as background. What problem occurs?",
+      "options": [
+        "Branding issue",
+        "Accessibility issue",
+        "Visual hierarchy failure",
+        "Backend issue"
+      ],
+      "answer": "Visual hierarchy failure"
+    },
+    {
+      "id": 6,
+      "level": "easy",
+      "question": "Loading spinner keeps spinning without result. What UX impact does this create?",
+      "options": [
+        "Better engagement",
+        "User frustration",
+        "Faster interaction",
+        "Improved accessibility"
+      ],
+      "answer": "User frustration"
+    },
+    {
+      "id": 7,
+      "level": "easy",
+      "question": "Form submits but no confirmation message appears. What is missing?",
+      "options": [
+        "Feedback mechanism",
+        "Animation",
+        "Typography",
+        "Navigation"
+      ],
+      "answer": "Feedback mechanism"
+    },
+    {
+      "id": 8,
+      "level": "easy",
+      "question": "Dropdown closes immediately after clicking. Likely cause?",
+      "options": [
+        "Hover CSS conflict",
+        "Color issue",
+        "Animation delay",
+        "Server issue"
+      ],
+      "answer": "Hover CSS conflict"
+    },
+    {
+      "id": 9,
+      "level": "easy",
+      "question": "A mobile site layout breaks on smaller screens. What is missing?",
+      "options": [
+        "API integration",
+        "Responsive design",
+        "Dark mode",
+        "SEO"
+      ],
+      "answer": "Responsive design"
+    },
+    {
+      "id": 10,
+      "level": "easy",
+      "question": "Users can't tap a menu icon on mobile easily. Why?",
+      "options": [
+        "Too large icon",
+        "Small touch target",
+        "Animation issue",
+        "Typography"
+      ],
+      "answer": "Small touch target"
+    },
+    {
+      "id": 11,
+      "level": "medium",
+      "question": "A button works on desktop but not on mobile devices. Likely reason?",
+      "options": [
+        "Typography mismatch",
+        "Media query conflict",
+        "SEO error",
+        "Color issue"
+      ],
+      "answer": "Media query conflict"
+    },
+    {
+      "id": 12,
+      "level": "medium",
+      "question": "CSS: pointer-events:none is applied on a button. What happens?",
+      "options": [
+        "Button animates",
+        "Button becomes unclickable",
+        "Button enlarges",
+        "Button gets highlighted"
+      ],
+      "answer": "Button becomes unclickable"
+    },
+    {
+      "id": 13,
+      "level": "medium",
+      "question": "Modal opens but background content is clickable. Missing?",
+      "options": [
+        "Proper z-index",
+        "Padding",
+        "Font",
+        "API"
+      ],
+      "answer": "Proper z-index"
+    },
+    {
+      "id": 14,
+      "level": "medium",
+      "question": "Users ignore an important banner repeatedly. What is this phenomenon?",
+      "options": [
+        "Dark pattern",
+        "Banner blindness",
+        "Hick's Law",
+        "Affordance"
+      ],
+      "answer": "Banner blindness"
+    },
+    {
+      "id": 15,
+      "level": "medium",
+      "question": "Clickable card has no hover feedback. Which UX principle is violated?",
+      "options": [
+        "Affordance",
+        "Branding",
+        "Grid",
+        "Typography"
+      ],
+      "answer": "Affordance"
+    },
+    {
+      "id": 16,
+      "level": "medium",
+      "question": "JS click event is attached to an element ID that doesn't exist. Result?",
+      "options": [
+        "Event won't trigger",
+        "Button animates",
+        "Page reloads",
+        "Layout breaks"
+      ],
+      "answer": "Event won't trigger"
+    },
+    {
+      "id": 17,
+      "level": "medium",
+      "question": "Users abandon checkout at payment page. First UX step?",
+      "options": [
+        "Add animation",
+        "Conduct usability testing",
+        "Change logo",
+        "Improve typography"
+      ],
+      "answer": "Conduct usability testing"
+    },
+    {
+      "id": 18,
+      "level": "medium",
+      "question": "Too many navigation choices slow decision making. Which law applies?",
+      "options": [
+        "Fitts Law",
+        "Hick Law",
+        "Jakob Law",
+        "Pareto"
+      ],
+      "answer": "Hick Law"
+    },
+    {
+      "id": 19,
+      "level": "medium",
+      "question": "Tooltip appears too late after hover. Issue?",
+      "options": [
+        "Interaction timing problem",
+        "SEO issue",
+        "Typography",
+        "Branding"
+      ],
+      "answer": "Interaction timing problem"
+    },
+    {
+      "id": 20,
+      "level": "medium",
+      "question": "Form resets after validation error. UX problem?",
+      "options": [
+        "No error feedback",
+        "Animation issue",
+        "Grid issue",
+        "Branding"
+      ],
+      "answer": "No error feedback"
+    },
+    {
+      "id": 21,
+      "level": "hard",
+      "question": "Position:absolute causes UI components to overlap unexpectedly. Why?",
+      "options": [
+        "Out of normal document flow",
+        "SEO issue",
+        "Server error",
+        "Color issue"
+      ],
+      "answer": "Out of normal document flow"
+    },
+    {
+      "id": 22,
+      "level": "hard",
+      "question": "Users hesitate before clicking CTA due to unclear wording. This affects?",
+      "options": [
+        "Learnability",
+        "Performance",
+        "SEO",
+        "Animation"
+      ],
+      "answer": "Learnability"
+    },
+    {
+      "id": 23,
+      "level": "hard",
+      "question": "Dark theme fails WCAG standards. Why?",
+      "options": [
+        "Low color contrast ratio",
+        "Animation speed",
+        "Typography",
+        "Grid"
+      ],
+      "answer": "Low color contrast ratio"
+    },
+    {
+      "id": 24,
+      "level": "hard",
+      "question": "Heatmap shows users clicking non-clickable icons repeatedly. Indicates?",
+      "options": [
+        "False affordance",
+        "Strong branding",
+        "Consistency",
+        "Animation"
+      ],
+      "answer": "False affordance"
+    },
+    {
+      "id": 25,
+      "level": "hard",
+      "question": "Inconsistent button styles across pages lead to?",
+      "options": [
+        "Increased cognitive load",
+        "Better UX",
+        "Improved flow",
+        "Fast onboarding"
+      ],
+      "answer": "Increased cognitive load"
+    },
+    {
+      "id": 26,
+      "level": "advanced",
+      "question": "Product scales but UI becomes inconsistent across modules. Missing?",
+      "options": [
+        "Design system governance",
+        "Animation",
+        "Typography",
+        "Dark mode"
+      ],
+      "answer": "Design system governance"
+    },
+    {
+      "id": 27,
+      "level": "advanced",
+      "question": "Users complete tasks but feel unsatisfied. Which UX dimension lacks?",
+      "options": [
+        "Desirability",
+        "Accessibility",
+        "Navigation",
+        "Typography"
+      ],
+      "answer": "Desirability"
+    },
+    {
+      "id": 28,
+      "level": "advanced",
+      "question": "Enterprise UI inconsistency affects long-term usage. Result?",
+      "options": [
+        "Cognitive overload",
+        "Faster onboarding",
+        "Better retention",
+        "Improved SEO"
+      ],
+      "answer": "Cognitive overload"
+    },
+    {
+      "id": 29,
+      "level": "advanced",
+      "question": "High conversion UI fails user retention. What should be evaluated?",
+      "options": [
+        "Emotional experience",
+        "Font size",
+        "Animation",
+        "Color"
+      ],
+      "answer": "Emotional experience"
+    },
+    {
+      "id": 30,
+      "level": "advanced",
+      "question": "Scaling UI needs reusable components for consistency. Best solution?",
+      "options": [
+        "Component-driven architecture",
+        "More animations",
+        "Bright colors",
+        "Random layout"
+      ],
+      "answer": "Component-driven architecture"
+    }
+  ]
+}

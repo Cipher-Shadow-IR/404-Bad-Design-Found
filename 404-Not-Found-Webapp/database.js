@@ -13,16 +13,37 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
     // ===============================
     // TEAMS TABLE
     // ===============================
+db.run(`
+    CREATE TABLE IF NOT EXISTS teams (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        team_name TEXT UNIQUE NOT NULL,
+        phone TEXT NOT NULL,
+        start_time INTEGER,
+        submitted INTEGER DEFAULT 0,
+        cheat_count INTEGER DEFAULT 0,
+        is_blocked INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`);
+
+    // ===============================
+    // TEAM QUESTIONS (server-assigned)
+    // ===============================
     db.run(`
-        CREATE TABLE IF NOT EXISTS teams (
+        CREATE TABLE IF NOT EXISTS team_questions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            team_name TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            start_time INTEGER,
-            submitted INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            team_id INTEGER NOT NULL,
+            question_id INTEGER,
+            type TEXT NOT NULL,
+            grid_size INTEGER,
+            puzzle_image TEXT,
+            answered INTEGER DEFAULT 0,
+            correct INTEGER DEFAULT 0,
+            FOREIGN KEY (team_id) REFERENCES teams(id)
         )
     `);
+
+
 
     // ===============================
     // LOGIN LOGS
