@@ -134,7 +134,11 @@ function showSecurityWarning(title, message, callback) {
 
 /* =========================
    TOPBAR (TEAM + TIMER)
+   Auto-submit at 0, 2-min warning
 ========================= */
+let warningShown = false;
+let autoSubmitted = false;
+
 function initTopbar() {
   const teamName = localStorage.getItem("team_name");
   const startTime = localStorage.getItem("start_time");
@@ -150,14 +154,26 @@ function initTopbar() {
   teamEl.textContent = teamName;
 
   const totalTime = 20 * 60; // 20 minutes in seconds
+  const WARNING_AT = 2 * 60;  // show warning at 2 minutes remaining
 
   function updateTimer() {
     const now = Date.now();
     const elapsed = Math.floor((now - parseInt(startTime)) / 1000);
     const remaining = totalTime - elapsed;
 
+    // ── Time's up → auto-submit ──
     if (remaining <= 0) {
       timerEl.textContent = "00:00";
+      if (!autoSubmitted) {
+        autoSubmitted = true;
+        showSecurityWarning(
+          "⏰ TIME'S UP",
+          "Your 20 minutes are over. Your design is being auto-submitted now.",
+          () => { submitDesign(true); }
+        );
+        // Fallback: force submit after 4 seconds even if modal isn't dismissed
+        setTimeout(() => { submitDesign(true); }, 4000);
+      }
       return;
     }
 
@@ -169,10 +185,114 @@ function initTopbar() {
       .padStart(2, "0");
 
     timerEl.textContent = `${mins}:${secs}`;
+
+    // ── Last 2 minutes → red timer + warning banner ──
+    if (remaining <= WARNING_AT) {
+      timerEl.style.color = "#ff4d6a";
+      timerEl.style.animation = "pulse-text 1s ease-in-out infinite";
+
+      if (!warningShown) {
+        warningShown = true;
+        showTimerWarning();
+      }
+    }
   }
 
   updateTimer();
   setInterval(updateTimer, 1000);
+}
+
+/* 2-minute warning banner */
+function showTimerWarning() {
+  // Remove existing warning if any
+  const existing = document.getElementById("timer-warning-banner");
+  if (existing) existing.remove();
+
+  const banner = document.createElement("div");
+  banner.id = "timer-warning-banner";
+  banner.innerHTML = `
+    <span class="warning-pulse">⚠️</span>
+    <span><b>2 minutes remaining!</b> Hurry up — your design will be auto-submitted when time runs out.</span>
+    <button id="dismiss-timer-warning">✕</button>
+  `;
+
+  Object.assign(banner.style, {
+    position: "fixed",
+    top: "60px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: "10000",
+    background: "linear-gradient(135deg, #ff4d6a, #ff6b35)",
+    color: "#fff",
+    padding: "12px 24px",
+    borderRadius: "12px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: "14px",
+    fontWeight: "500",
+    boxShadow: "0 8px 32px rgba(255,77,106,0.4)",
+    animation: "slideDown 0.4s ease-out, pulse-banner 2s ease-in-out infinite",
+    maxWidth: "600px",
+    width: "90%",
+  });
+
+  // Inject keyframes if not already present
+  if (!document.getElementById("timer-warning-styles")) {
+    const style = document.createElement("style");
+    style.id = "timer-warning-styles";
+    style.textContent = `
+      @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+        to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+      @keyframes pulse-banner {
+        0%, 100% { box-shadow: 0 8px 32px rgba(255,77,106,0.4); }
+        50% { box-shadow: 0 8px 48px rgba(255,77,106,0.7); }
+      }
+      @keyframes pulse-text {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      .warning-pulse {
+        animation: pulse-text 1s ease-in-out infinite;
+        font-size: 18px;
+      }
+      #dismiss-timer-warning {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 4px 8px;
+        margin-left: auto;
+      }
+      #dismiss-timer-warning:hover { background: rgba(255,255,255,0.35); }
+    `;
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(banner);
+
+  banner.querySelector("#dismiss-timer-warning").addEventListener("click", () => {
+    banner.style.animation = "none";
+    banner.style.opacity = "0";
+    banner.style.transform = "translateX(-50%) translateY(-100%)";
+    banner.style.transition = "all 0.3s ease-in";
+    setTimeout(() => banner.remove(), 300);
+  });
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    if (banner.parentNode) {
+      banner.style.opacity = "0";
+      banner.style.transform = "translateX(-50%) translateY(-100%)";
+      banner.style.transition = "all 0.3s ease-in";
+      setTimeout(() => banner.remove(), 300);
+    }
+  }, 10000);
 }
 
 /* =========================
@@ -231,6 +351,7 @@ function createElementCard(item, isLocked) {
   div.draggable = !isLocked;
   div.dataset.src = item.src;
   div.dataset.locked = isLocked ? "true" : "false";
+  div.dataset.elementName = item.name || elementNameFromSrc(item.src);
 
   const name = formatName(item.src);
 
@@ -240,7 +361,7 @@ function createElementCard(item, isLocked) {
     ${isLocked ? '<div class="lock-overlay"><span class="lock-icon">🔒</span></div>' : ''}
   `;
 
-  // Locked element click → quiz popup
+  // Locked element click → quiz popup for this specific element
   if (isLocked) {
     div.addEventListener("click", () => {
       showQuizPopup(item, div);
@@ -250,19 +371,25 @@ function createElementCard(item, isLocked) {
   return div;
 }
 
+function elementNameFromSrc(src) {
+  return src.split("/").pop().replace(/\.(png|jpe?g|gif|svg|webp)$/i, "");
+}
+
 function formatName(file) {
   return file
     .split("/").pop()
     .replace("_demo.png", "")
     .replace(".png", "")
+    .replace(".jpeg", "")
     .replace(/[_-]/g, " ")
     .replace(/\b\w/g, l => l.toUpperCase());
 }
 
 /* =========================
    QUIZ DATA & STATE (SERVER-ASSIGNED)
+   Each locked element gets its own unique question.
 ========================= */
-let teamQuestions = [];  // The 5 server-assigned questions
+let quizByElement = {};  // { element_name: questionRow }
 let quizAttempted = 0;
 let quizTotal = 5;
 let quizCorrect = 0;
@@ -275,27 +402,53 @@ async function loadQuizData() {
   try {
     const res = await fetch(`/quiz/${teamId}`);
     const data = await res.json();
-    teamQuestions = data;
-    quizTotal = teamQuestions.length;
 
-    // Count already answered
-    quizAttempted = teamQuestions.filter(q => q.answered).length;
-    quizCorrect = teamQuestions.filter(q => q.answered && q.correct).length;
-    quizWrong = teamQuestions.filter(q => q.answered && !q.correct).length;
+    // Build element_name → question mapping
+    quizByElement = {};
+    data.forEach(q => {
+      if (q.element_name) {
+        quizByElement[q.element_name] = q;
+      }
+    });
+
+    quizTotal = data.length;
+    quizAttempted = data.filter(q => q.answered).length;
+    quizCorrect = data.filter(q => q.answered && q.correct).length;
+    quizWrong = data.filter(q => q.answered && !q.correct).length;
 
     updateQuizCounter();
+
+    // Restore element states for already-answered questions
+    restoreElementStates();
   } catch (err) {
     console.error("Failed to load quiz data", err);
   }
 }
 
-function getNextUnansweredQuestion() {
-  return teamQuestions.find(q => !q.answered) || null;
+function restoreElementStates() {
+  // For each answered question, update the corresponding element card
+  document.querySelectorAll(".element.locked").forEach(card => {
+    const elName = card.dataset.elementName;
+    const q = quizByElement[elName];
+    if (q && q.answered) {
+      if (q.correct) {
+        unlockElement(card);
+      } else {
+        lockElementPermanently(card);
+      }
+    }
+  });
+}
+
+function getQuestionForElement(elementName) {
+  return quizByElement[elementName] || null;
 }
 
 function updateQuizCounter() {
-  const el = document.getElementById("quiz-counter");
-  if (el) el.textContent = `${quizAttempted} / ${quizTotal}`;
+  const attemptedEl = document.getElementById("quiz-attempted");
+  const pendingEl = document.getElementById("quiz-pending");
+  if (attemptedEl) attemptedEl.textContent = quizAttempted;
+  if (pendingEl) pendingEl.textContent = quizTotal - quizAttempted;
 }
 
 // Load quiz data handled in initApp()
@@ -310,21 +463,23 @@ function showQuizPopup(item, elementCard) {
   const existing = document.querySelector(".quiz-popup-overlay");
   if (existing) existing.remove();
 
-  const questionRow = getNextUnansweredQuestion();
+  // Find the question assigned to THIS specific element
+  const elName = elementCard.dataset.elementName || elementNameFromSrc(item.src);
+  const questionRow = getQuestionForElement(elName);
 
   const overlay = document.createElement("div");
   overlay.className = "quiz-popup-overlay";
 
   if (!questionRow) {
-    // No more questions available
+    // No question for this element (shouldn't happen normally)
     overlay.innerHTML = `
       <div class="quiz-popup">
         <div class="quiz-popup-header">
           <span class="quiz-popup-icon">📋</span>
-          <h3>No More Questions</h3>
+          <h3>No Question Available</h3>
         </div>
         <div class="quiz-popup-body">
-          <p class="quiz-popup-message">All quiz questions have been used up!</p>
+          <p class="quiz-popup-message">No quiz question is assigned to this element.</p>
         </div>
         <div class="quiz-popup-actions">
           <button class="quiz-popup-close">Close</button>
@@ -336,6 +491,11 @@ function showQuizPopup(item, elementCard) {
       setTimeout(() => overlay.remove(), 200);
     });
     document.body.appendChild(overlay);
+    return;
+  }
+
+  // If already answered, don't show popup again
+  if (questionRow.answered) {
     return;
   }
 
@@ -626,10 +786,11 @@ function updateProgress() {
   const countEl = document.getElementById("placed-count");
   const fillEl = document.getElementById("progress-fill");
 
+  const MAX_ELEMENTS = 15;
+
   if (countEl) countEl.textContent = count;
   if (fillEl) {
-    const totalElements = document.querySelectorAll(".element:not(.locked)").length || 3;
-    const pct = Math.min(100, Math.round((count / totalElements) * 100));
+    const pct = Math.min(100, Math.round((count / MAX_ELEMENTS) * 100));
     fillEl.style.width = pct + "%";
   }
 

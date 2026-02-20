@@ -6,152 +6,386 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - 404 NOT FOUND</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     :root {
-      --bg: #0f1220;
-      --card: #171a2b;
-      --border: rgba(255, 255, 255, .08);
-      --primary: #7c6cff;
-      --primary2: #9b8cff;
-      --text: #f5f6ff;
-      --muted: #9aa0c5;
+      --bg1: #6b52ff;
+      --bg2: #8f69ff;
+      --primary: #5a4df3;
+      --primary2: #6d5cff;
+      --accent: #ff7ac7;
+      --text: #1b1b2a;
+      --muted: #6f6f86;
+      --green: #34d399;
+      --danger: #ef4444;
+      --radius: 18px;
+      --shadow: 0 18px 40px rgba(10, 10, 35, .18);
     }
 
     * {
-      box-sizing: border-box
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    body {
-      margin: 0;
-      font-family: 'Outfit', sans-serif;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: var(--bg);
+    html, body {
+      height: 100%;
       overflow: hidden;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
     }
 
-    /* soft mesh glow */
-    body::before,
-    body::after {
-      content: "";
-      position: absolute;
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      animation: bgShift 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgShift {
+      0%   { background: linear-gradient(135deg, #6b52ff, #8f69ff); }
+      33%  { background: linear-gradient(135deg, #5a4df3, #9b7dff); }
+      66%  { background: linear-gradient(135deg, #7c5cf8, #6b52ff); }
+      100% { background: linear-gradient(135deg, #8f69ff, #5a4df3); }
+    }
+
+    /* ======= animated background layer ======= */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* soft radial glow that follows mouse */
+    .mouse-glow {
+      position: fixed;
       width: 500px;
       height: 500px;
       border-radius: 50%;
-      filter: blur(120px);
-      opacity: .25;
+      background: radial-gradient(circle, rgba(255,122,199,.18) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      transition: left .3s ease-out, top .3s ease-out;
+      will-change: left, top;
     }
 
-    body::before {
-      background: #7c6cff;
-      top: -150px;
-      left: -150px;
+    /* floating UI/UX icons */
+    .float-icon {
+      position: absolute;
+      font-size: 22px;
+      color: rgba(255, 255, 255, .12);
+      animation: floatUp linear infinite;
+      will-change: transform;
+      pointer-events: none;
+      user-select: none;
     }
 
-    body::after {
-      background: #3ad0ff;
-      bottom: -200px;
-      right: -150px;
+    @keyframes floatUp {
+      0% {
+        transform: translateY(100vh) rotate(0deg) scale(0.6);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg) scale(1.1);
+        opacity: 0;
+      }
     }
 
+    /* dot grid background */
+    .dot-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: radial-gradient(rgba(255,255,255,.1) 1.2px, transparent 1.2px);
+      background-size: 32px 32px;
+      animation: gridPulse 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes gridPulse {
+      from { opacity: .35; }
+      to   { opacity: .6; }
+    }
+
+    /* moving gradient orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: .2;
+      animation: orbFloat 12s ease-in-out infinite alternate;
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      width: 350px;
+      height: 350px;
+      background: #ff7ac7;
+      top: -80px;
+      left: -80px;
+      animation-duration: 10s;
+    }
+
+    .orb-2 {
+      width: 280px;
+      height: 280px;
+      background: #66e0ff;
+      bottom: -60px;
+      right: -60px;
+      animation-duration: 14s;
+      animation-delay: -4s;
+    }
+
+    .orb-3 {
+      width: 200px;
+      height: 200px;
+      background: #ffe56b;
+      top: 50%;
+      right: 15%;
+      animation-duration: 11s;
+      animation-delay: -2s;
+    }
+
+    @keyframes orbFloat {
+      0%   { transform: translate(0, 0) scale(1); }
+      25%  { transform: translate(30px, -40px) scale(1.1); }
+      50%  { transform: translate(-20px, 30px) scale(.95); }
+      75%  { transform: translate(40px, 20px) scale(1.05); }
+      100% { transform: translate(-30px, -20px) scale(1); }
+    }
+
+    /* ======= login card ======= */
     .auth-container {
       position: relative;
+      z-index: 10;
       width: 100%;
       max-width: 420px;
-      padding: 3rem 2.5rem;
-      border-radius: 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      box-shadow: 0 30px 60px rgba(0, 0, 0, .45);
+      padding: 2.8rem 2.5rem;
+      border-radius: 24px;
+      background: rgba(25, 22, 60, .68);
+      border: 1px solid rgba(255, 255, 255, .18);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow:
+        0 30px 70px rgba(10, 10, 35, .40),
+        inset 0 1px 0 rgba(255, 255, 255, .08);
       text-align: center;
+      animation: cardEntrance .7s cubic-bezier(.22, 1, .36, 1) both;
     }
 
+    @keyframes cardEntrance {
+      from {
+        opacity: 0;
+        transform: translateY(40px) scale(.92);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* subtle shimmer on card border */
+    .auth-container::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 25px;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,.15),
+        transparent 40%,
+        transparent 60%,
+        rgba(255,122,199,.12)
+      );
+      z-index: -1;
+      animation: shimmer 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes shimmer {
+      0%   { opacity: .5; }
+      100% { opacity: 1; }
+    }
+
+    /* ======= logo ======= */
     .logo {
-      font-size: 32px;
-      margin-bottom: 12px;
-      color: var(--primary);
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #140e3a;
+      background: linear-gradient(135deg, #ffe56b, #ff7ac7, #66e0ff);
+      box-shadow: 0 4px 18px rgba(255, 122, 199, .35);
+      margin-bottom: 1.2rem;
+      animation: logoPulse 3s ease-in-out infinite;
     }
 
+    @keyframes logoPulse {
+      0%, 100% { box-shadow: 0 4px 18px rgba(255, 122, 199, .35); transform: scale(1); }
+      50%      { box-shadow: 0 6px 28px rgba(255, 122, 199, .55); transform: scale(1.05); }
+    }
+
+    /* ======= title ======= */
     .auth-title {
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
-      letter-spacing: .5px;
+      font-size: 1.7rem;
+      font-weight: 800;
+      margin-bottom: 1.8rem;
+      letter-spacing: .3px;
+      color: #fff;
     }
 
+    /* ======= form ======= */
     .form-group {
-      margin-bottom: 1.3rem;
+      margin-bottom: 1.2rem;
       text-align: left;
     }
 
     .form-group label {
-      font-size: .8rem;
-      color: var(--muted);
-      margin-bottom: .4rem;
+      font-size: .75rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, .65);
+      margin-bottom: .45rem;
       display: block;
       letter-spacing: .5px;
+      text-transform: uppercase;
     }
 
     .form-group input {
       width: 100%;
       padding: .85rem 1rem;
       border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #101325;
-      color: var(--text);
+      border: 1.5px solid rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .06);
+      color: #fff;
+      font-family: inherit;
       font-size: .95rem;
-      transition: .2s ease;
+      font-weight: 500;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, .35);
     }
 
     .form-group input:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(124, 108, 255, .25);
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, .1);
+      box-shadow: 0 0 0 3px rgba(255, 122, 199, .2), 0 0 20px rgba(255, 122, 199, .08);
     }
 
+    /* ======= button ======= */
     .auth-btn {
+      position: relative;
       width: 100%;
-      padding: .9rem;
+      padding: .95rem;
       border: none;
-      border-radius: 12px;
-      margin-top: .5rem;
-      font-weight: 600;
+      border-radius: 14px;
+      margin-top: .6rem;
+      font-weight: 800;
       font-size: 1rem;
+      font-family: inherit;
       color: #fff;
       cursor: pointer;
-      background: linear-gradient(90deg, var(--primary), var(--primary2));
-      transition: .2s ease;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), #ff5c72);
+      box-shadow: 0 6px 22px rgba(255, 92, 114, .35);
+      transition: transform .15s, box-shadow .15s;
+      overflow: hidden;
+    }
+
+    /* sweeping shine on button */
+    .auth-btn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.25) 50%, transparent 60%);
+      animation: btnShine 3s ease-in-out infinite;
+    }
+
+    @keyframes btnShine {
+      0%   { left: -60%; }
+      50%  { left: 120%; }
+      100% { left: 120%; }
     }
 
     .auth-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(124, 108, 255, .35);
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 12px 35px rgba(255, 92, 114, .5);
     }
 
+    .auth-btn:active {
+      transform: translateY(0) scale(.97);
+    }
+
+    /* ======= error ======= */
     .error-msg {
       margin-top: 1rem;
-      font-size: .85rem;
-      color: #ff6b6b;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--danger);
       min-height: 18px;
     }
 
+    /* ======= footer note ======= */
     .event-note {
-      margin-top: 1.5rem;
-      font-size: .75rem;
-      color: var(--muted);
-      letter-spacing: .4px;
+      margin-top: 1.6rem;
+      font-size: .72rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, .45);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    /* ======= responsive ======= */
+    @media (max-width: 480px) {
+      .auth-container {
+        margin: 0 16px;
+        padding: 2.2rem 1.8rem;
+      }
+      .float-icon { font-size: 16px; }
+      .orb { display: none; }
+    }
+
+    /* reduce motion for accessibility & weak GPUs */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+      }
     }
   </style>
 </head>
 
 <body>
 
+  <!-- animated background -->
+  <div class="dot-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="bg-layer" id="bg-layer"></div>
+  <div class="mouse-glow" id="mouse-glow"></div>
+
+  <!-- login card -->
   <div class="auth-container">
     <div class="logo">
       <i class="fa-solid fa-layer-group"></i>
@@ -162,12 +396,12 @@
     <form id="login-form">
       <div class="form-group">
         <label>Team Name</label>
-        <input type="text" id="team_name" required>
+        <input type="text" id="team_name" placeholder="e.g. Design Mavericks" required>
       </div>
 
       <div class="form-group">
         <label>10 Digit Phone Number</label>
-        <input type="tel" id="password" maxlength="10" required>
+        <input type="tel" id="password" placeholder="9876543210" maxlength="10" required>
       </div>
 
       <button type="submit" class="auth-btn">
@@ -183,6 +417,66 @@
   </div>
 
   <script>
+    /* ============ FLOATING UI / UX ICONS ============
+       Lightweight — only 12-15 DOM elements total,
+       pure CSS animation, no canvas/WebGL.            */
+    (() => {
+      const icons = [
+        'fa-pen-fancy', 'fa-palette', 'fa-vector-square', 'fa-object-group',
+        'fa-bezier-curve', 'fa-eye-dropper', 'fa-paintbrush', 'fa-crop-simple',
+        'fa-swatchbook', 'fa-wand-magic-sparkles', 'fa-compass-drafting',
+        'fa-shapes', 'fa-ruler-combined', 'fa-layer-group', 'fa-code'
+      ];
+      const layer = document.getElementById('bg-layer');
+      const COUNT = 14; // small count = good for slow PCs
+
+      function spawnIcon() {
+        const el = document.createElement('i');
+        const icon = icons[Math.floor(Math.random() * icons.length)];
+        el.className = `fa-solid ${icon} float-icon`;
+        el.style.left = Math.random() * 100 + '%';
+        el.style.fontSize = (16 + Math.random() * 16) + 'px';
+        const dur = 12 + Math.random() * 14; // 12-26s
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = Math.random() * dur + 's';
+        el.style.color = `rgba(255,255,255,${.06 + Math.random() * .1})`;
+        layer.appendChild(el);
+        return el;
+      }
+
+      for (let i = 0; i < COUNT; i++) spawnIcon();
+
+      // recycle icons that finish animating (keep DOM light)
+      layer.addEventListener('animationend', (e) => {
+        if (e.target.classList.contains('float-icon')) {
+          e.target.remove();
+          spawnIcon();
+        }
+      });
+    })();
+
+    /* ============ MOUSE-REACTIVE GLOW ============ */
+    const glow = document.getElementById('mouse-glow');
+    document.addEventListener('mousemove', (e) => {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+    });
+
+    /* ============ CARD TILT ON MOUSE (subtle) ============ */
+    const card = document.querySelector('.auth-container');
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - .5;  // -0.5 to 0.5
+      const y = (e.clientY - rect.top) / rect.height - .5;
+      card.style.transform = `perspective(800px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateY(0) rotateX(0)';
+      card.style.transition = 'transform .4s ease-out';
+      setTimeout(() => card.style.transition = '', 400);
+    });
+
+    /* ============ LOGIN LOGIC (unchanged) ============ */
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 

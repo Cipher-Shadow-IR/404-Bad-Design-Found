@@ -27,12 +27,13 @@ db.run(`
 `);
 
     // ===============================
-    // TEAM QUESTIONS (server-assigned)
+    // TEAM QUESTIONS (server-assigned, 1 per locked element)
     // ===============================
     db.run(`
         CREATE TABLE IF NOT EXISTS team_questions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             team_id INTEGER NOT NULL,
+            element_name TEXT,
             question_id INTEGER,
             type TEXT NOT NULL,
             grid_size INTEGER,
@@ -42,6 +43,14 @@ db.run(`
             FOREIGN KEY (team_id) REFERENCES teams(id)
         )
     `);
+
+    // Migration: add element_name column if table existed before this update
+    db.run(`ALTER TABLE team_questions ADD COLUMN element_name TEXT`, (err) => {
+        // Ignore "duplicate column" error — means column already exists
+        if (err && !err.message.includes("duplicate column")) {
+            console.error("Migration warning:", err.message);
+        }
+    });
 
 
 
