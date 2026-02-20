@@ -8,151 +8,163 @@
 </head>
 <body>
 
-<div class="app">
+<div class="page-wrapper">
 
-  <!-- Header Bar -->
-  <header class="header-bar">
-    <div class="header-brand">
-      <div class="header-logo">W</div>
-      <h1>UI/UX <em>Warriors</em></h1>
-    </div>
-    <div class="header-center">TechXtreme Challenge</div>
-    <div class="header-actions">
-      <div class="header-admin">
-        <div class="admin-avatar">👤</div>
-        <span>Admin</span>
+  <!-- ====== TOPBAR (matches builder) ====== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">W</div>
+      <div class="brand-text">
+        <div class="title">ADMIN PANEL</div>
+        <div class="subtitle">TechXtreme — 404 Not Found</div>
       </div>
-      <button class="btn-logout">Logout</button>
+    </div>
+    <div class="topbar-right">
+      <div class="pill" id="live-clock">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <b id="clock-time">--:--</b>
+      </div>
+      <div class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Teams: <b id="pill-team-count">0</b>
+      </div>
+      <button class="btn btn-ghost" onclick="loadAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
     </div>
   </header>
 
-  <!-- Body: Sidebar + Main -->
-  <div class="body-layout">
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <nav>
-        <a class="active"><span class="nav-icon">📊</span> Dashboard</a>
-        <a><span class="nav-icon">⏱️</span> Live Timer</a>
-        <a><span class="nav-icon">📈</span> Statistics</a>
-        <a><span class="nav-icon">⚙️</span> Settings</a>
-      </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main">
-
-      <!-- Page Header -->
-      <div class="page-header">
-        <div class="page-header-left">
-          <h2>Submission Review</h2>
-          <p>Here are the designs submitted by teams. Click on <strong>'View Design'</strong> to see the detailed UI/UX.</p>
-        </div>
-        <button class="btn-refresh" id="btn-refresh" onclick="loadAll()">↻ Refresh Data</button>
+  <!-- ====== STATS ROW ====== -->
+  <section class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon-box blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-
-      <!-- Content Split: Table + Preview -->
-      <div class="content-split">
-
-        <!-- Table Panel -->
-        <div class="table-panel">
-          <div class="table-toolbar">
-            <div class="search-box">
-              <input id="search-input" placeholder="Search teams..." oninput="filterTable()" />
-            </div>
-            <div class="view-toggles">
-              <button class="active" title="List View">☰</button>
-              <button title="Grid View">⊞</button>
-            </div>
-          </div>
-
-          <div id="loading" class="loading">Loading teams...</div>
-          <div id="empty" class="empty" style="display:none">No teams found yet.</div>
-
-          <div class="table-scroll">
-            <table id="teams-table" style="display:none">
-              <thead>
-                <tr>
-                  <th>Team <span class="sort-icon">↕</span></th>
-                  <th>Unlocked <span class="sort-icon">↕</span></th>
-                  <th>Time Taken <span class="sort-icon">↕</span></th>
-                  <th>Preview</th>
-                </tr>
-              </thead>
-              <tbody id="teams-body"></tbody>
-            </table>
-          </div>
-        </div>
+      <div class="stat-info">
+        <div class="stat-label">Total Teams</div>
+        <div class="stat-value" id="stat-total">—</div>
       </div>
-
-      <!-- Stats Section -->
-      <div class="stats-section">
-        <h3>📋 Designs Summary</h3>
-        <div class="stats-cards">
-          <div class="stat-card">
-            <div class="stat-icon total">👥</div>
-            <div class="stat-info">
-              <div class="stat-label">Total Teams</div>
-              <div class="stat-value purple" id="stat-total">—</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon submitted">✅</div>
-            <div class="stat-info">
-              <div class="stat-label">Submitted</div>
-              <div class="stat-value green" id="stat-submitted">—</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon pending">⏳</div>
-            <div class="stat-info">
-              <div class="stat-label">Pending</div>
-              <div class="stat-value yellow" id="stat-pending">—</div>
-              <div class="stat-progress">
-                <div class="stat-progress-fill yellow" id="pending-progress" style="width:0%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-box green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       </div>
+      <div class="stat-info">
+        <div class="stat-label">Submitted</div>
+        <div class="stat-value green" id="stat-submitted">—</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-box yellow">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value yellow" id="stat-pending">—</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon-box red">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Disqualified</div>
+        <div class="stat-value red" id="stat-disqualified">—</div>
+      </div>
+    </div>
+  </section>
 
-    </main>
+  <!-- ====== MAIN TABLE PANEL ====== -->
+  <main class="main-panel">
+    <div class="panel-head">
+      <span>Submission Review</span>
+    </div>
+
+    <div class="panel-toolbar">
+      <div class="tab-bar">
+        <button class="tab active" data-tab="all" onclick="switchTab('all')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          All Teams
+        </button>
+        <button class="tab" data-tab="submitted" onclick="switchTab('submitted')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Submitted
+        </button>
+        <button class="tab" data-tab="pending" onclick="switchTab('pending')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Pending
+        </button>
+      </div>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search-input" placeholder="Search teams..." oninput="filterTable()" />
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <div id="loading" class="loading-msg">Loading teams...</div>
+      <div id="empty" class="loading-msg" style="display:none">No teams found yet.</div>
+
+      <table id="teams-table" style="display:none">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Team</th>
+            <th>Phone</th>
+            <th>Quiz</th>
+            <th>Unlocked</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Preview</th>
+          </tr>
+        </thead>
+        <tbody id="teams-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+</div>
+
+<!-- ====== DESIGN PREVIEW MODAL ====== -->
+<div class="modal-overlay" id="design-modal" onclick="closeDesignModal(event)">
+  <div class="modal-box design-modal-box">
+    <button class="modal-close" onclick="closePreview()">&times;</button>
+    <div id="design-modal-body"></div>
   </div>
 </div>
 
-<!-- Team Detail Modal -->
-<div class="modal-overlay" id="modal" onclick="closeModal(event)">
-  <div class="modal-content">
-    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+<!-- ====== TEAM DETAIL MODAL ====== -->
+<div class="modal-overlay" id="team-modal" onclick="closeTeamModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('team-modal').classList.remove('open')">&times;</button>
     <h2 id="modal-title">Team Details</h2>
     <div id="modal-body"></div>
   </div>
 </div>
 
-<!-- Design Preview Modal -->
-<div class="design-modal-overlay" id="design-modal" onclick="closeDesignModal(event)">
-  <div class="design-modal-content">
-    <button class="modal-close" onclick="closePreview()">✕</button>
-    <div id="design-modal-body"></div>
-  </div>
-</div>
-
 <script>
-// 🔗 Points to the Admin-Webapp server (proxies from game server)
 const API = "http://localhost:4000";
 const GAME_SERVER = "http://localhost:3000";
 let allTeams = [];
+let currentTab = "all";
 
-// ====== LOAD ALL DATA ======
+// ====== CLOCK ======
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clock-time").textContent =
+    now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ====== LOAD ALL ======
 async function loadAll() {
-  const btn = document.getElementById("btn-refresh");
-  btn.textContent = "↻ Refreshing...";
   try {
     await Promise.all([loadTeams(), loadStats()]);
   } catch(e) {
     console.error("Server might not be running:", e);
   }
-  btn.textContent = "↻ Refresh Data";
 }
 
 // ====== LOAD TEAMS ======
@@ -168,6 +180,7 @@ async function loadTeams() {
   try {
     const res = await fetch(`${API}/admin/api/teams`);
     allTeams = await res.json();
+    document.getElementById("pill-team-count").textContent = allTeams.length;
 
     if (allTeams.length === 0) {
       loading.style.display = "none";
@@ -175,58 +188,121 @@ async function loadTeams() {
       return;
     }
 
-    renderTable(allTeams);
+    renderTable(getFilteredTeams());
     loading.style.display = "none";
     table.style.display = "table";
   } catch (e) {
-    loading.textContent = "⚠ Could not connect to server. Make sure both servers are running.";
+    loading.textContent = "⚠ Could not connect to server.";
     console.error(e);
   }
+}
+
+// ====== TAB SWITCHING ======
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add("active");
+  renderTable(getFilteredTeams());
+}
+
+function getFilteredTeams() {
+  const q = (document.getElementById("search-input").value || "").toLowerCase();
+  let teams = allTeams;
+
+  if (currentTab === "submitted") {
+    teams = teams.filter(t => (t.submitted === 1 || t.submitted === true));
+  } else if (currentTab === "pending") {
+    teams = teams.filter(t => !(t.submitted === 1 || t.submitted === true));
+  }
+
+  if (q) {
+    teams = teams.filter(t => t.team_name.toLowerCase().includes(q) || (t.phone || "").includes(q));
+  }
+  return teams;
+}
+
+function filterTable() {
+  renderTable(getFilteredTeams());
 }
 
 // ====== RENDER TABLE ======
 function renderTable(teams) {
   const tbody = document.getElementById("teams-body");
+  const table = document.getElementById("teams-table");
   tbody.innerHTML = "";
+
+  if (teams.length === 0) {
+    table.style.display = "none";
+    document.getElementById("empty").style.display = "block";
+    document.getElementById("empty").textContent = currentTab === "submitted"
+      ? "No submissions yet."
+      : currentTab === "pending"
+        ? "All teams have submitted!"
+        : "No teams found.";
+    return;
+  }
+
+  document.getElementById("empty").style.display = "none";
+  table.style.display = "table";
 
   teams.forEach((t, i) => {
     const tr = document.createElement("tr");
+    const globalIdx = allTeams.indexOf(t);
 
-    // Format time
+    const isSubmitted = t.submitted === 1 || t.submitted === true;
+    const isBlocked = t.is_blocked === 1 || t.is_blocked === true;
+    const cheated = t.cheated || false;
+    const isDisqualified = isBlocked || cheated;
+
+    // Time
     let timeTaken = "—";
     if (t.time_taken_seconds) {
       const mins = Math.floor(t.time_taken_seconds / 60);
       const secs = t.time_taken_seconds % 60;
-      timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      timeTaken = `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
     } else if (t.time_taken) {
-      const totalSecs = Math.floor(t.time_taken / 1000);
-      const mins = Math.floor(totalSecs / 60);
-      const secs = totalSecs % 60;
-      timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    } else if (t.start_time) {
+      const ts = Math.floor(t.time_taken / 1000);
+      timeTaken = `${String(Math.floor(ts/60)).padStart(2,"0")}:${String(ts%60).padStart(2,"0")}`;
+    } else if (t.start_time && !isSubmitted) {
       const elapsed = Date.now() - t.start_time;
       const mins = Math.floor(elapsed / 60000);
       const secs = Math.floor((elapsed % 60000) / 1000);
-      timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} (live)`;
+      timeTaken = `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")} (live)`;
     }
 
+    // Quiz
+    const qa = t.quiz ? t.quiz.total_attempted : (t.total_attempted || 0);
+    const qc = t.quiz ? t.quiz.total_correct : (t.total_correct || 0);
+    const quizDisplay = isSubmitted ? `${qc}/${qa}` : "—";
+    const quizClass = qc >= 3 ? "good" : qc >= 1 ? "mid" : "low";
+
+    // Unlocked
     const unlocked = t.unlocked_count || 0;
-    const isSubmitted = t.submitted === 1 || t.submitted === true;
-    const lockClass = isSubmitted ? "unlocked" : "locked";
-    const lockEmoji = isSubmitted ? "🔓" : "🔒";
+
+    // Status
+    let statusHTML = "";
+    if (isDisqualified) {
+      statusHTML = `<span class="status-pill dq"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> DISQUALIFIED</span>`;
+    } else if (isSubmitted) {
+      statusHTML = `<span class="status-pill done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Submitted</span>`;
+    } else {
+      statusHTML = `<span class="status-pill active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active</span>`;
+    }
+
+    if (isDisqualified) tr.classList.add("row-dq");
 
     tr.innerHTML = `
-      <td class="team-name-cell">${escapeHtml(t.team_name)}</td>
-      <td>
-        <div class="unlock-display">
-          ${unlocked} / 12
-          <span class="lock-icon ${lockClass}">${lockEmoji}</span>
-        </div>
-      </td>
+      <td class="col-num">${i + 1}</td>
+      <td class="col-team">${escapeHtml(t.team_name)}</td>
+      <td class="col-phone">${t.phone || "—"}</td>
+      <td><span class="quiz-chip ${isSubmitted ? quizClass : ''}">${quizDisplay}</span></td>
+      <td>${unlocked} / 5</td>
       <td>${timeTaken}</td>
+      <td>${statusHTML}</td>
       <td>
-        <button class="btn-view-design" onclick="viewDesign(${i})" ${!isSubmitted ? 'disabled' : ''}>
-          View Design &gt;
+        <button class="btn-preview" onclick="viewDesign(${globalIdx})" ${!isSubmitted ? 'disabled' : ''}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          View
         </button>
       </td>
     `;
@@ -234,7 +310,7 @@ function renderTable(teams) {
   });
 }
 
-// ====== VIEW DESIGN (Modal Popup) ======
+// ====== VIEW DESIGN ======
 function viewDesign(index) {
   const team = allTeams[index];
   if (!team) return;
@@ -245,58 +321,91 @@ function viewDesign(index) {
   const teamName = team.team_name || "Unknown";
   const unlocked = team.unlocked_count || 0;
   const cheated = team.cheated || false;
+  const cheatCount = team.cheat_count || 0;
+  const isBlocked = team.is_blocked === 1 || team.is_blocked === true;
+  const isDisqualified = isBlocked || cheated;
   const initial = teamName.charAt(0).toUpperCase();
 
-  // Get time
+  const qa = team.quiz ? team.quiz.total_attempted : (team.total_attempted || 0);
+  const qc = team.quiz ? team.quiz.total_correct : (team.total_correct || 0);
+
   let timeStr = "—";
   if (team.time_taken_seconds) {
     const m = Math.floor(team.time_taken_seconds / 60);
     const s = team.time_taken_seconds % 60;
     timeStr = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
   } else if (team.time_taken) {
-    const totalSecs = Math.floor(team.time_taken / 1000);
-    const m = Math.floor(totalSecs / 60);
-    const s = totalSecs % 60;
-    timeStr = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    const ts = Math.floor(team.time_taken / 1000);
+    timeStr = `${String(Math.floor(ts/60)).padStart(2,"0")}:${String(ts%60).padStart(2,"0")}`;
   }
 
-  // Get design elements
+  const submittedAt = team.submission_time_readable || (team.submission_timestamp ? new Date(team.submission_timestamp).toLocaleString() : '—');
   const designElements = team.design || team.canvas_elements || [];
+  const origW = team.canvas_width || 960;
+  const origH = team.canvas_height || 540;
+  const previewW = 710; // modal inner width
+  const scale = previewW / origW;
+  const previewH = Math.round(origH * scale);
 
-  // Build canvas HTML
   let canvasHTML = '';
   if (designElements.length > 0) {
     canvasHTML = designElements.map(el => {
       const src = el.src || el.element_src || '';
-      const x = el.x || el.x_coordinate || 0;
-      const y = el.y || el.y_coordinate || 0;
-      const w = el.w || el.width || 120;
-      const h = el.h || el.height || 80;
+      const x = (el.x || el.x_coordinate || 0) * scale;
+      const y = (el.y || el.y_coordinate || 0) * scale;
+      const w = (el.w || el.width || 120) * scale;
+      const h = (el.h || el.height || 80) * scale;
       const fullSrc = src.startsWith('http') ? src : `${GAME_SERVER}${src}`;
-      return `<div class="design-element" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
+      return `<div class="design-el" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px">
         <img src="${fullSrc}" alt="element" onerror="this.style.display='none'" />
       </div>`;
     }).join('');
   } else {
     canvasHTML = `<div class="canvas-empty">
-      <span class="empty-icon">📄</span>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       <span>No design elements found</span>
     </div>`;
   }
 
+  let integrityBadge = '';
+  if (isDisqualified) {
+    integrityBadge = `<span class="integrity-badge dq">DISQUALIFIED (${cheatCount} violation${cheatCount !== 1 ? 's' : ''})</span>`;
+  } else if (cheatCount > 0) {
+    integrityBadge = `<span class="integrity-badge warn">${cheatCount} warning(s)</span>`;
+  } else {
+    integrityBadge = `<span class="integrity-badge fair">Fair Play</span>`;
+  }
+
   body.innerHTML = `
-    <div class="design-modal-header">
-      <div class="preview-team-avatar">${initial}</div>
-      <div>
-        <div class="preview-team-name">${escapeHtml(teamName)}</div>
-        <div class="preview-meta">
-          <span>Unlocked: ${unlocked} / 12</span>
+    <div class="dm-header">
+      <div class="dm-avatar">${initial}</div>
+      <div class="dm-info">
+        <div class="dm-name">${escapeHtml(teamName)}</div>
+        <div class="dm-meta">
+          <span>${team.phone || '—'}</span>
+          <span>·</span>
+          <span>Unlocked: ${unlocked}/5</span>
+          <span>·</span>
           <span>Time: ${timeStr}</span>
-          ${cheated ? '<span class="cheated-badge yes">⚠ Cheated</span>' : '<span class="cheated-badge no">✓ Fair Play</span>'}
         </div>
       </div>
+      ${integrityBadge}
     </div>
-    <div class="design-canvas-area">
+    <div class="dm-chips">
+      <div class="dm-chip">
+        <div class="dm-chip-label">Quiz Score</div>
+        <div class="dm-chip-value">${qc} / ${qa}</div>
+      </div>
+      <div class="dm-chip">
+        <div class="dm-chip-label">Elements Used</div>
+        <div class="dm-chip-value">${designElements.length}</div>
+      </div>
+      <div class="dm-chip">
+        <div class="dm-chip-label">Submitted At</div>
+        <div class="dm-chip-value small">${submittedAt}</div>
+      </div>
+    </div>
+    <div class="dm-canvas" style="width:${previewW}px;height:${previewH}px;">
       ${canvasHTML}
     </div>
   `;
@@ -304,16 +413,9 @@ function viewDesign(index) {
   modal.classList.add("open");
 }
 
-// ====== CLOSE PREVIEW ======
-function closePreview() {
-  document.getElementById("design-modal").classList.remove("open");
-}
-
-function closeDesignModal(e) {
-  if (e.target === document.getElementById("design-modal")) {
-    closePreview();
-  }
-}
+function closePreview() { document.getElementById("design-modal").classList.remove("open"); }
+function closeDesignModal(e) { if (e.target === document.getElementById("design-modal")) closePreview(); }
+function closeTeamModal(e) { if (e.target === document.getElementById("team-modal")) document.getElementById("team-modal").classList.remove("open"); }
 
 // ====== LOAD STATS ======
 async function loadStats() {
@@ -324,69 +426,11 @@ async function loadStats() {
     document.getElementById("stat-submitted").textContent = stats.submitted;
     document.getElementById("stat-pending").textContent = stats.pending;
 
-    // Update progress bar
-    if (stats.total_teams > 0) {
-      const pendingPct = Math.round((stats.pending / stats.total_teams) * 100);
-      document.getElementById("pending-progress").style.width = pendingPct + "%";
-    }
+    // Count disqualified
+    const dqCount = allTeams.filter(t => t.is_blocked === 1 || t.is_blocked === true || t.cheated === true).length;
+    document.getElementById("stat-disqualified").textContent = dqCount;
   } catch (e) {
     console.error("Failed to load stats:", e);
-  }
-}
-
-// ====== SEARCH / FILTER ======
-function filterTable() {
-  const q = document.getElementById("search-input").value.toLowerCase();
-  const filtered = allTeams.filter(t => t.team_name.toLowerCase().includes(q));
-  renderTable(filtered);
-}
-
-// ====== VIEW TEAM DETAIL (Modal) ======
-async function viewTeam(id) {
-  const modal = document.getElementById("modal");
-  const title = document.getElementById("modal-title");
-  const body = document.getElementById("modal-body");
-
-  title.textContent = "Loading...";
-  body.innerHTML = "<p>Fetching team details...</p>";
-  modal.classList.add("open");
-
-  try {
-    const res = await fetch(`${API}/admin/api/teams/${id}`);
-    const team = await res.json();
-
-    title.textContent = team.team_name;
-
-    let html = `
-      <div class="detail-grid">
-        <div class="detail-item">
-          <label>Team ID</label>
-          <span>${team.id}</span>
-        </div>
-        <div class="detail-item">
-          <label>Phone</label>
-          <span>${team.phone || "—"}</span>
-        </div>
-        <div class="detail-item">
-          <label>Status</label>
-          <span class="badge ${team.submitted ? 'badge-submitted' : 'badge-pending'}">
-            ${team.submitted ? "Submitted" : "Pending"}
-          </span>
-        </div>
-      </div>
-    `;
-
-    body.innerHTML = html;
-  } catch (e) {
-    body.innerHTML = "<p>⚠ Failed to load team details.</p>";
-    console.error(e);
-  }
-}
-
-// ====== CLOSE MODAL ======
-function closeModal(e) {
-  if (e.target === document.getElementById("modal")) {
-    document.getElementById("modal").classList.remove("open");
   }
 }
 
@@ -398,17 +442,8 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function formatMs(ms) {
-  if (!ms) return "—";
-  const mins = Math.floor(ms / 60000);
-  const secs = Math.floor((ms % 60000) / 1000);
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-}
-
 // ====== INIT ======
 loadAll();
-
-// ====== AUTO-REFRESH every 10 seconds ======
 setInterval(loadAll, 10000);
 </script>
 

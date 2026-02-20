@@ -1116,7 +1116,9 @@ async function submitDesign(isForced = false) {
   const canvas_elements = Array.from(canvasElements).map(el => ({
     element_src: el.querySelector("img").src.replace(window.location.origin, ""),
     x_coordinate: parseInt(el.style.left) || 0,
-    y_coordinate: parseInt(el.style.top) || 0
+    y_coordinate: parseInt(el.style.top) || 0,
+    width: parseInt(el.style.width) || el.offsetWidth || 120,
+    height: parseInt(el.style.height) || el.offsetHeight || 80
   }));
 
   const payload = {
@@ -1125,6 +1127,8 @@ async function submitDesign(isForced = false) {
     submission_timestamp: now,
     submitted: true,
     time_taken_seconds: timeTakenSeconds,
+    canvas_width: dropRect.width,
+    canvas_height: dropRect.height,
     quiz: {
       total_attempted: quizAttempted,
       total_correct: quizCorrect

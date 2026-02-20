@@ -427,7 +427,7 @@ app.post("/cheat", (req, res) => {
 
 
 app.post("/submit", (req, res) => {
-    const { team_id, team_name, submission_timestamp, time_taken_seconds, quiz, canvas_elements } = req.body;
+    const { team_id, team_name, submission_timestamp, time_taken_seconds, quiz, canvas_elements, canvas_width, canvas_height } = req.body;
 
     if (!team_id || !quiz || !canvas_elements) {
         return res.status(400).json({ message: "Missing submission data" });
@@ -456,6 +456,8 @@ app.post("/submit", (req, res) => {
                 },
                 cheated,
                 cheat_count: team.cheat_count || 0,
+                canvas_width: canvas_width || null,
+                canvas_height: canvas_height || null,
                 canvas_elements: canvas_elements || []
             };
 
