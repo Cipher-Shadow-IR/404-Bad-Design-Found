@@ -941,27 +941,34 @@ function initSecurity() {
 ========================= */
 async function submitDesign(isForced = false) {
   const teamId = localStorage.getItem("team_id");
+  const teamName = localStorage.getItem("team_name");
+  const startTime = parseInt(localStorage.getItem("start_time"));
   if (!teamId) return;
+
+  const now = Date.now();
+  const timeTakenSeconds = Math.floor((now - startTime) / 1000);
 
   const dropZone = document.getElementById("drop-zone");
   const canvasElements = dropZone.querySelectorAll(".canvas-el-wrapper");
+  const dropRect = dropZone.getBoundingClientRect();
 
-  const design = Array.from(canvasElements).map(el => ({
-    src: el.querySelector("img").src.replace(window.location.origin, ""),
-    x: parseInt(el.style.left),
-    y: parseInt(el.style.top),
-    w: parseInt(el.style.width),
-    h: parseInt(el.style.height)
+  const canvas_elements = Array.from(canvasElements).map(el => ({
+    element_src: el.querySelector("img").src.replace(window.location.origin, ""),
+    x_coordinate: parseInt(el.style.left) || 0,
+    y_coordinate: parseInt(el.style.top) || 0
   }));
 
   const payload = {
     team_id: teamId,
-    quizStats: {
-      correct: quizCorrect,
-      wrong: quizWrong,
-      attempted: quizAttempted
+    team_name: teamName,
+    submission_timestamp: now,
+    submitted: true,
+    time_taken_seconds: timeTakenSeconds,
+    quiz: {
+      total_attempted: quizAttempted,
+      total_correct: quizCorrect
     },
-    design: design
+    canvas_elements: canvas_elements
   };
 
   try {
@@ -972,10 +979,16 @@ async function submitDesign(isForced = false) {
     });
 
     if (res.ok) {
+      const data = await res.json();
+      // Lock the entire interface
+      lockInterface();
+
       if (!isForced) {
-        showSecurityWarning("SUBMISSION SUCCESS", "Your design has been captured. Thank you for participating!", () => {
-          logout();
-        });
+        showSecurityWarning(
+          "✅ SUBMISSION SUCCESSFUL",
+          `Your design has been submitted! Time taken: ${Math.floor(timeTakenSeconds / 60)}m ${timeTakenSeconds % 60}s. Quiz: ${quizCorrect}/${quizAttempted} correct. Thank you for participating!`,
+          () => { logout(); }
+        );
       } else {
         logout();
       }
@@ -991,8 +1004,70 @@ async function submitDesign(isForced = false) {
   }
 }
 
-document.getElementById("submit-btn")?.addEventListener("click", () => {
-  if (confirm("Are you sure you want to submit your design? You will not be able to edit it afterwards.")) {
-    submitDesign();
+/* =========================
+   POST-SUBMISSION LOCKDOWN
+========================= */
+function lockInterface() {
+  // Disable drag and drop
+  const elements = document.querySelectorAll(".element");
+  elements.forEach(el => {
+    el.draggable = false;
+    el.style.pointerEvents = "none";
+  });
+
+  // Disable canvas interaction
+  const dropZone = document.getElementById("drop-zone");
+  if (dropZone) {
+    dropZone.style.pointerEvents = "none";
   }
+
+  // Disable submit button
+  const submitBtn = document.getElementById("submit-btn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.5";
+    submitBtn.style.pointerEvents = "none";
+  }
+
+  // Disable sidebar panels
+  const panels = document.querySelectorAll(".panel-body");
+  panels.forEach(p => { p.style.pointerEvents = "none"; p.style.opacity = "0.5"; });
+}
+
+/* =========================
+   SUBMIT BUTTON WITH CUSTOM CONFIRM
+========================= */
+document.getElementById("submit-btn")?.addEventListener("click", () => {
+  // Custom confirm dialog instead of browser confirm()
+  const existing = document.getElementById("security-warning-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.className = "security-modal";
+  modal.id = "security-warning-modal";
+  modal.innerHTML = `
+    <div class="security-icon">
+      <i class="fa-solid fa-paper-plane"></i>
+    </div>
+    <h3>Confirm Submission</h3>
+    <p>Are you sure you want to submit your design? You will not be able to edit it afterwards.</p>
+    <div style="display:flex; gap:12px; margin-top:1rem;">
+      <button class="security-btn" id="confirm-submit-yes" style="flex:1; background: linear-gradient(135deg, #7c6cff, #9b8cff);">Submit</button>
+      <button class="security-btn" id="confirm-submit-no" style="flex:1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add("active"), 10);
+
+  modal.querySelector("#confirm-submit-yes").addEventListener("click", () => {
+    modal.classList.remove("active");
+    setTimeout(() => modal.remove(), 300);
+    submitDesign();
+  });
+
+  modal.querySelector("#confirm-submit-no").addEventListener("click", () => {
+    modal.classList.remove("active");
+    setTimeout(() => modal.remove(), 300);
+  });
 });
+
