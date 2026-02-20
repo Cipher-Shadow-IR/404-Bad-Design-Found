@@ -3,79 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard — TechXtreme</title>
+  <title>Admin Dashboard — TechXtreme Challenge</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
 <div class="app">
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <h2 class="logo">TechXtreme<br><span>Admin Panel</span></h2>
-    <nav>
-      <a class="active">📊 Dashboard</a>
-    </nav>
-  </aside>
-
-  <!-- Main Content -->
-  <main class="main">
-
-    <!-- Topbar -->
-    <header class="topbar">
-      <h1>404 Not Found — Admin</h1>
-      <div class="admin">
-        <span class="admin-badge">🔑 Admin</span>
+  <!-- Header Bar -->
+  <header class="header-bar">
+    <div class="header-brand">
+      <div class="header-logo">W</div>
+      <h1>UI/UX <em>Warriors</em></h1>
+    </div>
+    <div class="header-center">TechXtreme Challenge</div>
+    <div class="header-actions">
+      <div class="header-admin">
+        <div class="admin-avatar">👤</div>
+        <span>Admin</span>
       </div>
-    </header>
+      <button class="btn-logout">Logout</button>
+    </div>
+  </header>
 
-    <!-- Title Row -->
-    <section class="title-row">
-      <div></div>
-      <button class="refresh" id="btn-refresh" onclick="loadAll()">↻ Refresh Data</button>
-    </section>
+  <!-- Body: Sidebar + Main -->
+  <div class="body-layout">
 
-    <!-- Summary Cards -->
-    <section class="summary">
-      <div class="summary-card">
-        <h3>Total Teams</h3>
-        <p id="stat-total">—</p>
-      </div>
-      <div class="summary-card submitted">
-        <h3>Submitted</h3>
-        <p id="stat-submitted">—</p>
-      </div>
-      <div class="summary-card pending">
-        <h3>Pending</h3>
-        <p id="stat-pending">—</p>
-      </div>
-    </section>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav>
+        <a class="active"><span class="nav-icon">📊</span> Dashboard</a>
+        <a><span class="nav-icon">⏱️</span> Live Timer</a>
+        <a><span class="nav-icon">📈</span> Statistics</a>
+        <a><span class="nav-icon">⚙️</span> Settings</a>
+      </nav>
+    </aside>
 
-    <!-- Table Section -->
-    <section class="card">
-      <div class="search-row">
-        <input id="search-input" placeholder="🔍 Search teams..." oninput="filterTable()" />
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2>Submission Review</h2>
+          <p>Here are the designs submitted by teams. Click on <strong>'View Design'</strong> to see the detailed UI/UX.</p>
+        </div>
+        <button class="btn-refresh" id="btn-refresh" onclick="loadAll()">↻ Refresh Data</button>
       </div>
 
-      <div id="loading" class="loading">Loading teams...</div>
-      <div id="empty" class="empty" style="display:none">No teams found yet.</div>
+      <!-- Content Split: Table + Preview -->
+      <div class="content-split">
 
-      <table id="teams-table" style="display:none">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Team Name</th>
-            <th>Unlocked</th>
-            <th>Time Taken</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="teams-body"></tbody>
-      </table>
-    </section>
+        <!-- Table Panel -->
+        <div class="table-panel">
+          <div class="table-toolbar">
+            <div class="search-box">
+              <input id="search-input" placeholder="Search teams..." oninput="filterTable()" />
+            </div>
+            <div class="view-toggles">
+              <button class="active" title="List View">☰</button>
+              <button title="Grid View">⊞</button>
+            </div>
+          </div>
 
-  </main>
+          <div id="loading" class="loading">Loading teams...</div>
+          <div id="empty" class="empty" style="display:none">No teams found yet.</div>
+
+          <div class="table-scroll">
+            <table id="teams-table" style="display:none">
+              <thead>
+                <tr>
+                  <th>Team <span class="sort-icon">↕</span></th>
+                  <th>Unlocked <span class="sort-icon">↕</span></th>
+                  <th>Time Taken <span class="sort-icon">↕</span></th>
+                  <th>Preview</th>
+                </tr>
+              </thead>
+              <tbody id="teams-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="stats-section">
+        <h3>📋 Designs Summary</h3>
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon total">👥</div>
+            <div class="stat-info">
+              <div class="stat-label">Total Teams</div>
+              <div class="stat-value purple" id="stat-total">—</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon submitted">✅</div>
+            <div class="stat-info">
+              <div class="stat-label">Submitted</div>
+              <div class="stat-value green" id="stat-submitted">—</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon pending">⏳</div>
+            <div class="stat-info">
+              <div class="stat-label">Pending</div>
+              <div class="stat-value yellow" id="stat-pending">—</div>
+              <div class="stat-progress">
+                <div class="stat-progress-fill yellow" id="pending-progress" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
 </div>
 
 <!-- Team Detail Modal -->
@@ -87,20 +129,30 @@
   </div>
 </div>
 
+<!-- Design Preview Modal -->
+<div class="design-modal-overlay" id="design-modal" onclick="closeDesignModal(event)">
+  <div class="design-modal-content">
+    <button class="modal-close" onclick="closePreview()">✕</button>
+    <div id="design-modal-body"></div>
+  </div>
+</div>
+
 <script>
-// 🔗 Points to the Admin-Webapp server (which reads from the shared database)
+// 🔗 Points to the Admin-Webapp server (proxies from game server)
 const API = "http://localhost:4000";
+const GAME_SERVER = "http://localhost:3000";
 let allTeams = [];
 
 // ====== LOAD ALL DATA ======
 async function loadAll() {
-  document.getElementById("btn-refresh").textContent = "↻ Refreshing...";
+  const btn = document.getElementById("btn-refresh");
+  btn.textContent = "↻ Refreshing...";
   try {
     await Promise.all([loadTeams(), loadStats()]);
   } catch(e) {
     console.error("Server might not be running:", e);
   }
-  document.getElementById("btn-refresh").textContent = "↻ Refresh Data";
+  btn.textContent = "↻ Refresh Data";
 }
 
 // ====== LOAD TEAMS ======
@@ -127,7 +179,7 @@ async function loadTeams() {
     loading.style.display = "none";
     table.style.display = "table";
   } catch (e) {
-    loading.textContent = "⚠ Could not connect to server. Make sure the 404-Not-Found-Webapp server is running on port 3000.";
+    loading.textContent = "⚠ Could not connect to server. Make sure both servers are running.";
     console.error(e);
   }
 }
@@ -140,11 +192,16 @@ function renderTable(teams) {
   teams.forEach((t, i) => {
     const tr = document.createElement("tr");
 
-    // Format time taken
+    // Format time
     let timeTaken = "—";
-    if (t.time_taken) {
-      const mins = Math.floor(t.time_taken / 60000);
-      const secs = Math.floor((t.time_taken % 60000) / 1000);
+    if (t.time_taken_seconds) {
+      const mins = Math.floor(t.time_taken_seconds / 60);
+      const secs = t.time_taken_seconds % 60;
+      timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    } else if (t.time_taken) {
+      const totalSecs = Math.floor(t.time_taken / 1000);
+      const mins = Math.floor(totalSecs / 60);
+      const secs = totalSecs % 60;
       timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
     } else if (t.start_time) {
       const elapsed = Date.now() - t.start_time;
@@ -153,19 +210,109 @@ function renderTable(teams) {
       timeTaken = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")} (live)`;
     }
 
-    const statusClass = t.has_submission ? "badge-submitted" : "badge-pending";
-    const statusText = t.has_submission ? "Submitted" : "Pending";
+    const unlocked = t.unlocked_count || 0;
+    const isSubmitted = t.submitted === 1 || t.submitted === true;
+    const lockClass = isSubmitted ? "unlocked" : "locked";
+    const lockEmoji = isSubmitted ? "🔓" : "🔒";
 
     tr.innerHTML = `
-      <td>${i + 1}</td>
       <td class="team-name-cell">${escapeHtml(t.team_name)}</td>
-      <td><span class="unlock-pill">${t.unlocked_count} unlocked</span></td>
+      <td>
+        <div class="unlock-display">
+          ${unlocked} / 12
+          <span class="lock-icon ${lockClass}">${lockEmoji}</span>
+        </div>
+      </td>
       <td>${timeTaken}</td>
-      <td><span class="badge ${statusClass}">${statusText}</span></td>
-      <td><button class="view" onclick="viewTeam(${t.id})">View Details</button></td>
+      <td>
+        <button class="btn-view-design" onclick="viewDesign(${i})" ${!isSubmitted ? 'disabled' : ''}>
+          View Design &gt;
+        </button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+// ====== VIEW DESIGN (Modal Popup) ======
+function viewDesign(index) {
+  const team = allTeams[index];
+  if (!team) return;
+
+  const modal = document.getElementById("design-modal");
+  const body = document.getElementById("design-modal-body");
+
+  const teamName = team.team_name || "Unknown";
+  const unlocked = team.unlocked_count || 0;
+  const cheated = team.cheated || false;
+  const initial = teamName.charAt(0).toUpperCase();
+
+  // Get time
+  let timeStr = "—";
+  if (team.time_taken_seconds) {
+    const m = Math.floor(team.time_taken_seconds / 60);
+    const s = team.time_taken_seconds % 60;
+    timeStr = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  } else if (team.time_taken) {
+    const totalSecs = Math.floor(team.time_taken / 1000);
+    const m = Math.floor(totalSecs / 60);
+    const s = totalSecs % 60;
+    timeStr = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+
+  // Get design elements
+  const designElements = team.design || team.canvas_elements || [];
+
+  // Build canvas HTML
+  let canvasHTML = '';
+  if (designElements.length > 0) {
+    canvasHTML = designElements.map(el => {
+      const src = el.src || el.element_src || '';
+      const x = el.x || el.x_coordinate || 0;
+      const y = el.y || el.y_coordinate || 0;
+      const w = el.w || el.width || 120;
+      const h = el.h || el.height || 80;
+      const fullSrc = src.startsWith('http') ? src : `${GAME_SERVER}${src}`;
+      return `<div class="design-element" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
+        <img src="${fullSrc}" alt="element" onerror="this.style.display='none'" />
+      </div>`;
+    }).join('');
+  } else {
+    canvasHTML = `<div class="canvas-empty">
+      <span class="empty-icon">📄</span>
+      <span>No design elements found</span>
+    </div>`;
+  }
+
+  body.innerHTML = `
+    <div class="design-modal-header">
+      <div class="preview-team-avatar">${initial}</div>
+      <div>
+        <div class="preview-team-name">${escapeHtml(teamName)}</div>
+        <div class="preview-meta">
+          <span>Unlocked: ${unlocked} / 12</span>
+          <span>Time: ${timeStr}</span>
+          ${cheated ? '<span class="cheated-badge yes">⚠ Cheated</span>' : '<span class="cheated-badge no">✓ Fair Play</span>'}
+        </div>
+      </div>
+    </div>
+    <div class="design-canvas-area">
+      ${canvasHTML}
+    </div>
+  `;
+
+  modal.classList.add("open");
+}
+
+// ====== CLOSE PREVIEW ======
+function closePreview() {
+  document.getElementById("design-modal").classList.remove("open");
+}
+
+function closeDesignModal(e) {
+  if (e.target === document.getElementById("design-modal")) {
+    closePreview();
+  }
 }
 
 // ====== LOAD STATS ======
@@ -176,6 +323,12 @@ async function loadStats() {
     document.getElementById("stat-total").textContent = stats.total_teams;
     document.getElementById("stat-submitted").textContent = stats.submitted;
     document.getElementById("stat-pending").textContent = stats.pending;
+
+    // Update progress bar
+    if (stats.total_teams > 0) {
+      const pendingPct = Math.round((stats.pending / stats.total_teams) * 100);
+      document.getElementById("pending-progress").style.width = pendingPct + "%";
+    }
   } catch (e) {
     console.error("Failed to load stats:", e);
   }
@@ -188,7 +341,7 @@ function filterTable() {
   renderTable(filtered);
 }
 
-// ====== VIEW TEAM DETAIL ======
+// ====== VIEW TEAM DETAIL (Modal) ======
 async function viewTeam(id) {
   const modal = document.getElementById("modal");
   const title = document.getElementById("modal-title");
@@ -211,41 +364,16 @@ async function viewTeam(id) {
           <span>${team.id}</span>
         </div>
         <div class="detail-item">
-          <label>Created At</label>
-          <span>${team.created_at || "—"}</span>
+          <label>Phone</label>
+          <span>${team.phone || "—"}</span>
         </div>
         <div class="detail-item">
           <label>Status</label>
-          <span class="badge ${team.submission ? 'badge-submitted' : 'badge-pending'}">
-            ${team.submission ? "Submitted" : "Pending"}
+          <span class="badge ${team.submitted ? 'badge-submitted' : 'badge-pending'}">
+            ${team.submitted ? "Submitted" : "Pending"}
           </span>
         </div>
       </div>
-
-      <h3>🔓 Unlocked Elements (${team.unlocks.length})</h3>
-      ${team.unlocks.length > 0
-        ? `<div class="unlock-list">${team.unlocks.map(u => `<span class="unlock-tag">${escapeHtml(u)}</span>`).join("")}</div>`
-        : `<p class="muted">No elements unlocked yet.</p>`
-      }
-
-      <h3>📝 Submission</h3>
-      ${team.submission
-        ? `<div class="submission-info">
-            <p><strong>Time Taken:</strong> ${formatMs(team.submission.time_taken)}</p>
-            <p><strong>Unlocked Count:</strong> ${team.submission.unlocked_count}</p>
-            <details>
-              <summary>View Layout JSON</summary>
-              <pre class="json-block">${escapeHtml(team.submission.layout_json)}</pre>
-            </details>
-           </div>`
-        : `<p class="muted">No submission yet.</p>`
-      }
-
-      <h3>🕐 Login History (${team.login_logs.length})</h3>
-      ${team.login_logs.length > 0
-        ? `<ul class="login-list">${team.login_logs.map(l => `<li>${new Date(l.login_time).toLocaleString()}</li>`).join("")}</ul>`
-        : `<p class="muted">No login records.</p>`
-      }
     `;
 
     body.innerHTML = html;
