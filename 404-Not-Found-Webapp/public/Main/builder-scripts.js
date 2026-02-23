@@ -381,6 +381,7 @@ function formatName(file) {
     .replace("_demo.png", "")
     .replace(".png", "")
     .replace(".jpeg", "")
+    .replace(".svg", "")
     .replace(/[_-]/g, " ")
     .replace(/\b\w/g, l => l.toUpperCase());
 }

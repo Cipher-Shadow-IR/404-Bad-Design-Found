@@ -1,3 +1,5 @@
 node_modules/
 *.db
 db.sqlite
+404-Not-Found-Webapp/public/db.sqlite
+Admin-Webapp/public/db.sqlite
