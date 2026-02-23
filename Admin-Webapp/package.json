@@ -1,7 +1,7 @@
 {
     "name": "admin-webapp",
     "version": "1.0.0",
-    "description": "Admin Dashboard for TechXtreme 404-Not-Found Challenge",
+    "description": "Admin Dashboard for 404: Bad Design Found — Event Management Panel",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",

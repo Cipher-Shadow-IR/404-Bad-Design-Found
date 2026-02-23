@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - 404 NOT FOUND</title>
+  <title>Login — 404: Bad Design Found</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,7 +30,8 @@
       padding: 0;
     }
 
-    html, body {
+    html,
+    body {
       height: 100%;
       overflow: hidden;
       font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -46,10 +47,21 @@
     }
 
     @keyframes bgShift {
-      0%   { background: linear-gradient(135deg, #6b52ff, #8f69ff); }
-      33%  { background: linear-gradient(135deg, #5a4df3, #9b7dff); }
-      66%  { background: linear-gradient(135deg, #7c5cf8, #6b52ff); }
-      100% { background: linear-gradient(135deg, #8f69ff, #5a4df3); }
+      0% {
+        background: linear-gradient(135deg, #6b52ff, #8f69ff);
+      }
+
+      33% {
+        background: linear-gradient(135deg, #5a4df3, #9b7dff);
+      }
+
+      66% {
+        background: linear-gradient(135deg, #7c5cf8, #6b52ff);
+      }
+
+      100% {
+        background: linear-gradient(135deg, #8f69ff, #5a4df3);
+      }
     }
 
     /* ======= animated background layer ======= */
@@ -67,7 +79,7 @@
       width: 500px;
       height: 500px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,122,199,.18) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(255, 122, 199, .18) 0%, transparent 70%);
       pointer-events: none;
       z-index: 1;
       transform: translate(-50%, -50%);
@@ -91,12 +103,15 @@
         transform: translateY(100vh) rotate(0deg) scale(0.6);
         opacity: 0;
       }
+
       10% {
         opacity: 1;
       }
+
       90% {
         opacity: 1;
       }
+
       100% {
         transform: translateY(-100px) rotate(360deg) scale(1.1);
         opacity: 0;
@@ -108,14 +123,19 @@
       position: fixed;
       inset: 0;
       z-index: 0;
-      background-image: radial-gradient(rgba(255,255,255,.1) 1.2px, transparent 1.2px);
+      background-image: radial-gradient(rgba(255, 255, 255, .1) 1.2px, transparent 1.2px);
       background-size: 32px 32px;
       animation: gridPulse 4s ease-in-out infinite alternate;
     }
 
     @keyframes gridPulse {
-      from { opacity: .35; }
-      to   { opacity: .6; }
+      from {
+        opacity: .35;
+      }
+
+      to {
+        opacity: .6;
+      }
     }
 
     /* moving gradient orbs */
@@ -159,11 +179,25 @@
     }
 
     @keyframes orbFloat {
-      0%   { transform: translate(0, 0) scale(1); }
-      25%  { transform: translate(30px, -40px) scale(1.1); }
-      50%  { transform: translate(-20px, 30px) scale(.95); }
-      75%  { transform: translate(40px, 20px) scale(1.05); }
-      100% { transform: translate(-30px, -20px) scale(1); }
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      25% {
+        transform: translate(30px, -40px) scale(1.1);
+      }
+
+      50% {
+        transform: translate(-20px, 30px) scale(.95);
+      }
+
+      75% {
+        transform: translate(40px, 20px) scale(1.05);
+      }
+
+      100% {
+        transform: translate(-30px, -20px) scale(1);
+      }
     }
 
     /* ======= login card ======= */
@@ -190,6 +224,7 @@
         opacity: 0;
         transform: translateY(40px) scale(.92);
       }
+
       to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -202,20 +237,23 @@
       position: absolute;
       inset: -1px;
       border-radius: 25px;
-      background: linear-gradient(
-        135deg,
-        rgba(255,255,255,.15),
-        transparent 40%,
-        transparent 60%,
-        rgba(255,122,199,.12)
-      );
+      background: linear-gradient(135deg,
+          rgba(255, 255, 255, .15),
+          transparent 40%,
+          transparent 60%,
+          rgba(255, 122, 199, .12));
       z-index: -1;
       animation: shimmer 4s ease-in-out infinite alternate;
     }
 
     @keyframes shimmer {
-      0%   { opacity: .5; }
-      100% { opacity: 1; }
+      0% {
+        opacity: .5;
+      }
+
+      100% {
+        opacity: 1;
+      }
     }
 
     /* ======= logo ======= */
@@ -235,8 +273,17 @@
     }
 
     @keyframes logoPulse {
-      0%, 100% { box-shadow: 0 4px 18px rgba(255, 122, 199, .35); transform: scale(1); }
-      50%      { box-shadow: 0 6px 28px rgba(255, 122, 199, .55); transform: scale(1.05); }
+
+      0%,
+      100% {
+        box-shadow: 0 4px 18px rgba(255, 122, 199, .35);
+        transform: scale(1);
+      }
+
+      50% {
+        box-shadow: 0 6px 28px rgba(255, 122, 199, .55);
+        transform: scale(1.05);
+      }
     }
 
     /* ======= title ======= */
@@ -317,14 +364,22 @@
       left: -60%;
       width: 40%;
       height: 200%;
-      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.25) 50%, transparent 60%);
+      background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, .25) 50%, transparent 60%);
       animation: btnShine 3s ease-in-out infinite;
     }
 
     @keyframes btnShine {
-      0%   { left: -60%; }
-      50%  { left: 120%; }
-      100% { left: 120%; }
+      0% {
+        left: -60%;
+      }
+
+      50% {
+        left: 120%;
+      }
+
+      100% {
+        left: 120%;
+      }
     }
 
     .auth-btn:hover {
@@ -361,13 +416,22 @@
         margin: 0 16px;
         padding: 2.2rem 1.8rem;
       }
-      .float-icon { font-size: 16px; }
-      .orb { display: none; }
+
+      .float-icon {
+        font-size: 16px;
+      }
+
+      .orb {
+        display: none;
+      }
     }
 
     /* reduce motion for accessibility & weak GPUs */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
+
+      *,
+      *::before,
+      *::after {
         animation-duration: 0s !important;
         transition-duration: 0s !important;
       }
