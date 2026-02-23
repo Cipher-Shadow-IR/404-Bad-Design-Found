@@ -322,14 +322,14 @@ app.get("/quiz/:team_id", (req, res) => {
                     return null;
                 };
 
-                // Pick 7 theory questions (3 easy, 2 medium, 2 hard) — each unique
+                // Pick 7 theory questions: 60% easy (4), 30% medium (2), 10% hard (1)
                 const theoryPicks = [
                     pickOne(availEasy, easyPool),
                     pickOne(availEasy, easyPool),
                     pickOne(availEasy, easyPool),
+                    pickOne(availEasy, easyPool),
                     pickOne(availMedium, mediumPool),
                     pickOne(availMedium, mediumPool),
-                    pickOne(availHard, hardPool),
                     pickOne(availHard, hardPool)
                 ];
 
@@ -352,10 +352,10 @@ app.get("/quiz/:team_id", (req, res) => {
                     { element: shuffledElements[4], type: "theory", qId: theoryPicks[4].id, grid: null, img: null },
                     { element: shuffledElements[5], type: "theory", qId: theoryPicks[5].id, grid: null, img: null },
                     { element: shuffledElements[6], type: "theory", qId: theoryPicks[6].id, grid: null, img: null },
-                    // 4 puzzle (2×3x3, 2×5x5)
+                    // 4 puzzle: 2×3x3, 1×4x4, 1×5x5
                     { element: shuffledElements[7],  type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[0] },
                     { element: shuffledElements[8],  type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[1] },
-                    { element: shuffledElements[9],  type: "puzzle", qId: null, grid: 5, img: shuffledPuzzles[2] },
+                    { element: shuffledElements[9],  type: "puzzle", qId: null, grid: 4, img: shuffledPuzzles[2] },
                     { element: shuffledElements[10], type: "puzzle", qId: null, grid: 5, img: shuffledPuzzles[3] },
                 ];
 
