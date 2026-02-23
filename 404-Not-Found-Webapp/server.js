@@ -200,11 +200,17 @@ app.get("/elements", (req, res) => {
     ];
 
     const lockedElements = [
-        { src: "/Assets/Elements/locked_elements/buy_now_button.png", locked: true },
-        { src: "/Assets/Elements/locked_elements/hamburger.png", locked: true },
-        { src: "/Assets/Elements/locked_elements/slider.png", locked: true },
-        { src: "/Assets/Elements/locked_elements/wishlist.png", locked: true },
-        { src: "/Assets/Elements/locked_elements/sale.jpeg", locked: true },
+        { src: "/Assets/elements_svg/Locked/buy_now_button.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/hamburger.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/slider.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/wishlist.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/sale.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/404_rbg.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/electronics.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/home_decor.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/kids.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/men.svg", locked: true },
+        { src: "/Assets/elements_svg/Locked/women.svg", locked: true },
     ];
 
     const all = [...freeElements, ...lockedElements].map(el => ({
@@ -249,13 +255,19 @@ function shuffle(arr) {
     return a;
 }
 
-/* The 5 locked element names — must match /elements response */
+/* The 11 locked element names — must match /elements response */
 const LOCKED_ELEMENT_NAMES = [
     "buy_now_button",
     "hamburger",
     "slider",
     "wishlist",
-    "sale"
+    "sale",
+    "404_rbg",
+    "electronics",
+    "home_decor",
+    "kids",
+    "men",
+    "women"
 ];
 
 /* =========================
@@ -310,10 +322,14 @@ app.get("/quiz/:team_id", (req, res) => {
                     return null;
                 };
 
-                // Pick 3 theory questions (easy, medium, hard) — each unique
+                // Pick 7 theory questions (3 easy, 2 medium, 2 hard) — each unique
                 const theoryPicks = [
                     pickOne(availEasy, easyPool),
+                    pickOne(availEasy, easyPool),
+                    pickOne(availEasy, easyPool),
                     pickOne(availMedium, mediumPool),
+                    pickOne(availMedium, mediumPool),
+                    pickOne(availHard, hardPool),
                     pickOne(availHard, hardPool)
                 ];
 
@@ -321,18 +337,26 @@ app.get("/quiz/:team_id", (req, res) => {
                     return res.status(500).json({ message: "Not enough questions available" });
                 }
 
-                // Pick 2 different puzzle images
+                // Pick 4 different puzzle images (we have 7 available)
                 const shuffledPuzzles = shuffle(puzzleImages);
 
                 // Build assignment: element_name → question
                 // Shuffle locked element order so assignment is randomized
                 const shuffledElements = shuffle(LOCKED_ELEMENT_NAMES);
                 const assignments = [
+                    // 7 theory
                     { element: shuffledElements[0], type: "theory", qId: theoryPicks[0].id, grid: null, img: null },
                     { element: shuffledElements[1], type: "theory", qId: theoryPicks[1].id, grid: null, img: null },
                     { element: shuffledElements[2], type: "theory", qId: theoryPicks[2].id, grid: null, img: null },
-                    { element: shuffledElements[3], type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[0] },
-                    { element: shuffledElements[4], type: "puzzle", qId: null, grid: 5, img: shuffledPuzzles[1] },
+                    { element: shuffledElements[3], type: "theory", qId: theoryPicks[3].id, grid: null, img: null },
+                    { element: shuffledElements[4], type: "theory", qId: theoryPicks[4].id, grid: null, img: null },
+                    { element: shuffledElements[5], type: "theory", qId: theoryPicks[5].id, grid: null, img: null },
+                    { element: shuffledElements[6], type: "theory", qId: theoryPicks[6].id, grid: null, img: null },
+                    // 4 puzzle (2×3x3, 2×5x5)
+                    { element: shuffledElements[7],  type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[0] },
+                    { element: shuffledElements[8],  type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[1] },
+                    { element: shuffledElements[9],  type: "puzzle", qId: null, grid: 5, img: shuffledPuzzles[2] },
+                    { element: shuffledElements[10], type: "puzzle", qId: null, grid: 5, img: shuffledPuzzles[3] },
                 ];
 
                 const stmt = db.prepare(

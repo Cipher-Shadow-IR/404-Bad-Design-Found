@@ -381,6 +381,7 @@ function formatName(file) {
     .replace("_demo.png", "")
     .replace(".png", "")
     .replace(".jpeg", "")
+    .replace(".svg", "")
     .replace(/[_-]/g, " ")
     .replace(/\b\w/g, l => l.toUpperCase());
 }
@@ -391,7 +392,7 @@ function formatName(file) {
 ========================= */
 let quizByElement = {};  // { element_name: questionRow }
 let quizAttempted = 0;
-let quizTotal = 5;
+let quizTotal = 11;
 let quizCorrect = 0;
 let quizWrong = 0;
 
@@ -782,11 +783,23 @@ let selectedElement = null;
 
 function updateProgress() {
   const dropZone = document.getElementById("drop-zone");
-  const count = dropZone.querySelectorAll(".canvas-el-wrapper").length;
+  const wrappers = dropZone.querySelectorAll(".canvas-el-wrapper");
   const countEl = document.getElementById("placed-count");
   const fillEl = document.getElementById("progress-fill");
 
   const MAX_ELEMENTS = 15;
+
+  // Count unique element sources (not total wrappers)
+  const uniqueSrcs = new Set();
+  wrappers.forEach(w => {
+    const img = w.querySelector("img");
+    if (img && img.src) {
+      // Normalize: strip origin to get relative path
+      const rel = img.src.replace(window.location.origin, "");
+      uniqueSrcs.add(rel);
+    }
+  });
+  const count = uniqueSrcs.size;
 
   if (countEl) countEl.textContent = count;
   if (fillEl) {
@@ -795,11 +808,37 @@ function updateProgress() {
   }
 
   // Show/hide hint
-  if (count > 0) {
+  if (wrappers.length > 0) {
     dropZone.classList.add("has-elements");
   } else {
     dropZone.classList.remove("has-elements");
   }
+}
+
+/* =========================
+   Z-INDEX / LAYER CONTROLS
+========================= */
+let nextZIndex = 10;
+
+function bringToFront(wrapper) {
+  nextZIndex++;
+  wrapper.style.zIndex = nextZIndex;
+}
+
+function sendToBack(wrapper) {
+  // Set to 1, push everything else up
+  wrapper.style.zIndex = 1;
+}
+
+function bringForward(wrapper) {
+  const cur = parseInt(wrapper.style.zIndex) || 1;
+  wrapper.style.zIndex = cur + 1;
+  nextZIndex = Math.max(nextZIndex, cur + 1);
+}
+
+function sendBackward(wrapper) {
+  const cur = parseInt(wrapper.style.zIndex) || 1;
+  wrapper.style.zIndex = Math.max(1, cur - 1);
 }
 
 function selectElement(wrapper) {
@@ -807,13 +846,92 @@ function selectElement(wrapper) {
   document.querySelectorAll(".canvas-el-wrapper.selected").forEach(el => {
     el.classList.remove("selected");
   });
+
+  // Remove existing layer toolbar
+  const existingToolbar = document.getElementById("layer-toolbar");
+  if (existingToolbar) existingToolbar.remove();
+
   // Select this one
   if (wrapper) {
     wrapper.classList.add("selected");
     selectedElement = wrapper;
+    showLayerToolbar(wrapper);
   } else {
     selectedElement = null;
   }
+}
+
+function showLayerToolbar(wrapper) {
+  const existing = document.getElementById("layer-toolbar");
+  if (existing) existing.remove();
+
+  // Inject styles once
+  if (!document.getElementById("layer-toolbar-styles")) {
+    const style = document.createElement("style");
+    style.id = "layer-toolbar-styles";
+    style.textContent = `
+      #layer-toolbar {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+        background: rgba(20, 16, 40, 0.95);
+        backdrop-filter: blur(12px);
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(124,108,255,0.3);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        z-index: 99999;
+        animation: fadeUp 0.2s ease-out;
+      }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+      }
+      .layer-btn {
+        background: rgba(124,108,255,0.15);
+        border: 1px solid rgba(124,108,255,0.25);
+        color: #c4b8ff;
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+        font-family: 'Inter', sans-serif;
+      }
+      .layer-btn:hover {
+        background: rgba(124,108,255,0.35);
+        color: #fff;
+        border-color: rgba(124,108,255,0.5);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const toolbar = document.createElement("div");
+  toolbar.id = "layer-toolbar";
+  toolbar.innerHTML = `
+    <button class="layer-btn" data-action="back" title="Send to Back">⬇⬇ Back</button>
+    <button class="layer-btn" data-action="backward" title="Send Backward">⬇ Backward</button>
+    <button class="layer-btn" data-action="forward" title="Bring Forward">⬆ Forward</button>
+    <button class="layer-btn" data-action="front" title="Bring to Front">⬆⬆ Front</button>
+  `;
+
+  toolbar.addEventListener("click", (e) => {
+    const btn = e.target.closest(".layer-btn");
+    if (!btn) return;
+    e.stopPropagation();
+    const action = btn.dataset.action;
+    if (action === "front")    bringToFront(wrapper);
+    if (action === "forward")  bringForward(wrapper);
+    if (action === "backward") sendBackward(wrapper);
+    if (action === "back")     sendToBack(wrapper);
+  });
+
+  document.body.appendChild(toolbar);
 }
 
 function createCanvasElement(src, x, y) {
@@ -1022,6 +1140,8 @@ function initCanvasInteraction() {
     if (e.key === "Delete" && selectedElement) {
       selectedElement.remove();
       selectedElement = null;
+      const tb = document.getElementById("layer-toolbar");
+      if (tb) tb.remove();
       updateProgress();
     }
   });
