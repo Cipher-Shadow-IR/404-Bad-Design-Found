@@ -16,7 +16,8 @@
     <!-- ====== TOPBAR (matches builder) ====== -->
     <header class="topbar">
       <div class="brand">
-        <div class="logo"><img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.jpeg" alt="Logo"></div>
+        <div class="logo"><img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.jpeg" alt="Logo">
+        </div>
         <div class="brand-text">
           <div class="title">ADMIN PANEL</div>
           <div class="subtitle">404: Bad Design Found</div>
@@ -410,8 +411,9 @@
           const y = (el.y || el.y_coordinate || 0) * scale;
           const w = (el.w || el.width || 120) * scale;
           const h = (el.h || el.height || 80) * scale;
+          const z = el.z_index || el.zIndex || 1;
           const fullSrc = src.startsWith('http') ? src : `${GAME_SERVER}${src}`;
-          return `<div class="design-el" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px">
+          return `<div class="design-el" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;z-index:${z}">
         <img src="${fullSrc}" alt="element" onerror="this.style.display='none'" />
       </div>`;
         }).join('');

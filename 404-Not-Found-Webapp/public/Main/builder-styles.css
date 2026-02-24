@@ -682,8 +682,9 @@ html, body {
 
 .canvas-body {
   flex: 1;
+  min-height: 0;
   position: relative;
-  overflow: auto; /* Allow scrolling if screen is too small */
+  overflow: hidden; /* No scroll — fixed canvas size */
   background:
     radial-gradient(circle, rgba(90,77,243,.08) 1px, transparent 1px),
     linear-gradient(180deg, #fafafe, #f3f2ff);
@@ -691,16 +692,18 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 0;
 }
 
 /* ================= DROP ZONE (FULL CANVAS) ================= */
 
 .drop-zone {
   position: relative;
-  width: 100%;
-  max-width: 100%;
-  aspect-ratio: 16 / 9;
+  /* Fixed size — always 960×540 so coordinates are accurate.
+     A CSS scale via JS makes it fit the panel without scrolling. */
+  width: 960px;
+  height: 540px;
+  flex-shrink: 0;
   background: #fff;
   box-shadow: 0 10px 40px rgba(0,0,0,.1);
   border-radius: 4px;
@@ -708,7 +711,8 @@ html, body {
   justify-content: center;
   align-items: center;
   transition: background .25s ease;
-  overflow: hidden; /* Elements should stay inside the 16:9 box */
+  overflow: hidden;
+  transform-origin: center center;
 }
 
 .drop-zone-hint {

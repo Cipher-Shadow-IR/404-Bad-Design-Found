@@ -39,7 +39,7 @@ function initSession() {
       }
       overlay.classList.add("hidden");
       setTimeout(() => overlay.remove(), 300);
-      
+
       // Start the app logic
       initApp();
     } catch (err) {
@@ -96,11 +96,40 @@ function initApp() {
   initCanvasInteraction();
   initSecurity();
   loadQuizData();
+  scaleCanvas();
+  window.addEventListener('resize', scaleCanvas);
 }
 
 /* =========================
-   CUSTOM SECURITY WARNING UI
+   CANVAS SCALE (fit 960×540)
+   Keeps the fixed-size drop-zone nicely
+   filling the panel without any scrollbar.
 ========================= */
+function scaleCanvas() {
+  const body = document.querySelector('.canvas-body');
+  const zone = document.getElementById('drop-zone');
+  if (!body || !zone) return;
+
+  const CANVAS_W = 960;
+  const CANVAS_H = 540;
+  const PADDING = 24; // breathing room in px on each side
+
+  const availW = body.clientWidth - PADDING * 2;
+  const availH = body.clientHeight - PADDING * 2;
+
+  const scale = Math.min(availW / CANVAS_W, availH / CANVAS_H, 1); // never upscale
+  zone.style.transform = `scale(${scale})`;
+}
+
+/* Helper: returns the current CSS scale factor of the drop-zone */
+function getCanvasScale() {
+  const zone = document.getElementById('drop-zone');
+  if (!zone) return 1;
+  const transform = zone.style.transform;
+  const match = transform.match(/scale\(([\d.]+)\)/);
+  return match ? parseFloat(match[1]) : 1;
+}
+
 function showSecurityWarning(title, message, callback) {
   // Remove any existing one
   const existing = document.getElementById("security-warning-modal");
@@ -925,10 +954,10 @@ function showLayerToolbar(wrapper) {
     if (!btn) return;
     e.stopPropagation();
     const action = btn.dataset.action;
-    if (action === "front")    bringToFront(wrapper);
-    if (action === "forward")  bringForward(wrapper);
+    if (action === "front") bringToFront(wrapper);
+    if (action === "forward") bringForward(wrapper);
     if (action === "backward") sendBackward(wrapper);
-    if (action === "back")     sendToBack(wrapper);
+    if (action === "back") sendToBack(wrapper);
   });
 
   document.body.appendChild(toolbar);
@@ -1022,9 +1051,11 @@ function initCanvasDragDrop() {
     const src = e.dataTransfer.getData("text/plain");
     if (!src) return;
 
+    const scale = getCanvasScale();
     const rect = dropZone.getBoundingClientRect();
-    const x = e.clientX - rect.left - 60;
-    const y = e.clientY - rect.top - 40;
+    // Divide by scale to convert from screen pixels to canvas logical pixels
+    const x = (e.clientX - rect.left) / scale - 60;
+    const y = (e.clientY - rect.top) / scale - 40;
 
     createCanvasElement(src, Math.max(0, x), Math.max(0, y));
   });
@@ -1035,28 +1066,29 @@ function initCanvasDragDrop() {
 ========================= */
 function initMove(wrapper, startEvent) {
   const dropZone = document.getElementById("drop-zone");
-  const rect = dropZone.getBoundingClientRect();
+  const scale = getCanvasScale();
 
   const startX = startEvent.clientX;
   const startY = startEvent.clientY;
   const origLeft = parseInt(wrapper.style.left) || 0;
-  const origTop = parseInt(wrapper.style.top)  || 0;
+  const origTop = parseInt(wrapper.style.top) || 0;
 
   function onMove(e) {
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    // Divide mouse delta by scale to get logical canvas movement
+    const dx = (e.clientX - startX) / scale;
+    const dy = (e.clientY - startY) / scale;
 
     let newLeft = origLeft + dx;
-    let newTop  = origTop + dy;
+    let newTop = origTop + dy;
 
-    // Clamp to drop zone bounds
-    const maxLeft = rect.width - wrapper.offsetWidth;
-    const maxTop  = rect.height - wrapper.offsetHeight;
+    // Clamp to logical canvas size (960×540)
+    const maxLeft = 960 - wrapper.offsetWidth;
+    const maxTop = 540 - wrapper.offsetHeight;
     newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-    newTop  = Math.max(0, Math.min(newTop, maxTop));
+    newTop = Math.max(0, Math.min(newTop, maxTop));
 
     wrapper.style.left = newLeft + "px";
-    wrapper.style.top  = newTop + "px";
+    wrapper.style.top = newTop + "px";
   }
 
   function onUp() {
@@ -1078,13 +1110,14 @@ function initResize(wrapper, handlePos, startEvent) {
   const startW = wrapper.offsetWidth;
   const startH = wrapper.offsetHeight;
   const startLeft = parseInt(wrapper.style.left) || 0;
-  const startTop  = parseInt(wrapper.style.top)  || 0;
+  const startTop = parseInt(wrapper.style.top) || 0;
+  const scale = getCanvasScale();
 
-  const MIN_SIZE = 30;
+  const MIN_SIZE = 8;
 
   function onMove(e) {
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const dx = (e.clientX - startX) / scale;
+    const dy = (e.clientY - startY) / scale;
 
     let newW = startW;
     let newH = startH;
@@ -1107,10 +1140,10 @@ function initResize(wrapper, handlePos, startEvent) {
       newTop = startTop + (startH - newH);
     }
 
-    wrapper.style.width  = newW + "px";
+    wrapper.style.width = newW + "px";
     wrapper.style.height = newH + "px";
-    wrapper.style.left   = newLeft + "px";
-    wrapper.style.top    = newTop + "px";
+    wrapper.style.left = newLeft + "px";
+    wrapper.style.top = newTop + "px";
   }
 
   function onUp() {
@@ -1238,7 +1271,8 @@ async function submitDesign(isForced = false) {
     x_coordinate: parseInt(el.style.left) || 0,
     y_coordinate: parseInt(el.style.top) || 0,
     width: parseInt(el.style.width) || el.offsetWidth || 120,
-    height: parseInt(el.style.height) || el.offsetHeight || 80
+    height: parseInt(el.style.height) || el.offsetHeight || 80,
+    z_index: parseInt(el.style.zIndex) || 1
   }));
 
   const payload = {
