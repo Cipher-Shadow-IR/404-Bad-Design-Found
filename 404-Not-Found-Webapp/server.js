@@ -200,17 +200,17 @@ app.get("/elements", (req, res) => {
     ];
 
     const lockedElements = [
-        { src: "/Assets/elements_svg/Locked/buy_now_button.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/hamburger.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/slider.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/wishlist.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/sale.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/404_rbg.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/electronics.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/home_decor.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/kids.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/men.svg", locked: true },
-        { src: "/Assets/elements_svg/Locked/women.svg", locked: true },
+        { src: "/Assets/Elements/locked_elements/buy_now_button.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/hamburger.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/slider.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/wishlist.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/sale.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/404_rbg.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/electronics.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/home_decor.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/kids.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/men.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/women.png", locked: true },
     ];
 
     const all = [...freeElements, ...lockedElements].map(el => ({
