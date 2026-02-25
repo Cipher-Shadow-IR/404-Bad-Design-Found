@@ -359,14 +359,14 @@ table {
 }
 
 thead {
-  background: rgba(90, 77, 243, .04);
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 10; /* Higher priority */
 }
 
 th {
-  padding: 11px 14px;
+  background: #f9f9ff; /* Solid opaque background */
+  padding: 12px 14px;
   text-align: left;
   font-size: 11px;
   color: var(--muted);
@@ -374,6 +374,7 @@ th {
   letter-spacing: .7px;
   font-weight: 700;
   white-space: nowrap;
+  border-bottom: 2px solid rgba(0,0,0,.04); /* Clear separation */
 }
 
 td {

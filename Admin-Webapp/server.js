@@ -38,13 +38,32 @@ app.get("/admin/api/stats", async (req, res) => {
         const response = await fetch(`${GAME_API}/admin/teams`);
         const teams = await response.json();
 
-        const totalTeams = teams.length;
-        const submittedCount = teams.filter(t => t.submitted === 1).length;
+        const now = Date.now();
+        const LIMIT = 20 * 60 * 1000;
+
+        let submittedCount = 0;
+        let dqCount = 0;
+        let pendingCount = 0;
+
+        teams.forEach(t => {
+            const isSubmitted = t.submitted == 1 || t.submitted === true;
+            const isBlocked = t.is_blocked == 1 || t.is_blocked === true;
+            const isExpired = t.start_time && (now - t.start_time > LIMIT);
+
+            if (isBlocked) {
+                dqCount++;
+            } else if (isSubmitted || isExpired) {
+                submittedCount++;
+            } else {
+                pendingCount++;
+            }
+        });
 
         res.json({
-            total_teams: totalTeams,
+            total_teams: teams.length,
             submitted: submittedCount,
-            pending: totalTeams - submittedCount,
+            pending: pendingCount,
+            disqualified: dqCount
         });
     } catch (e) {
         console.error("Error fetching stats:", e);

@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard — 404: Bad Design Found</title>
-  <link rel="icon" type="image/jpeg" href="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.jpeg">
+  <link rel="icon" type="image/jpeg" href="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png">
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -16,7 +16,7 @@
     <!-- ====== TOPBAR (matches builder) ====== -->
     <header class="topbar">
       <div class="brand">
-        <div class="logo"><img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.jpeg" alt="Logo">
+        <div class="logo"><img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png" alt="Logo">
         </div>
         <div class="brand-text">
           <div class="title">ADMIN PANEL</div>
@@ -146,6 +146,14 @@
             </svg>
             Pending
           </button>
+          <button class="tab" data-tab="dq" onclick="switchTab('dq')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            </svg>
+            Disqualified
+          </button>
         </div>
         <div class="search-box">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -268,7 +276,9 @@
       if (currentTab === "submitted") {
         teams = teams.filter(t => (t.submitted === 1 || t.submitted === true));
       } else if (currentTab === "pending") {
-        teams = teams.filter(t => !(t.submitted === 1 || t.submitted === true));
+        teams = teams.filter(t => !(t.submitted === 1 || t.submitted === true) && !(t.is_blocked === 1 || t.is_blocked === true));
+      } else if (currentTab === "dq") {
+        teams = teams.filter(t => (t.is_blocked === 1 || t.is_blocked === true));
       }
 
       if (q) {
@@ -352,7 +362,7 @@
       <td class="col-team">${escapeHtml(t.team_name)}</td>
       <td class="col-phone">${t.phone || "—"}</td>
       <td><span class="quiz-chip ${isSubmitted ? quizClass : ''}">${quizDisplay}</span></td>
-      <td>${unlocked} / 5</td>
+      <td>${unlocked} / 11</td>
       <td>${timeTaken}</td>
       <td>${statusHTML}</td>
       <td>
@@ -399,7 +409,11 @@
       const designElements = team.design || team.canvas_elements || [];
       const origW = team.canvas_width || 960;
       const origH = team.canvas_height || 540;
-      const previewW = 710; // modal inner width
+
+      // Compute preview width from the modal box width (minus padding)
+      const modalBox = document.querySelector('.design-modal-box');
+      const availW = modalBox ? Math.floor(modalBox.clientWidth - 64) : 680;
+      const previewW = Math.min(availW, 900);
       const scale = previewW / origW;
       const previewH = Math.round(origH * scale);
 
@@ -407,14 +421,15 @@
       if (designElements.length > 0) {
         canvasHTML = designElements.map(el => {
           const src = el.src || el.element_src || '';
-          const x = (el.x || el.x_coordinate || 0) * scale;
-          const y = (el.y || el.y_coordinate || 0) * scale;
-          const w = (el.w || el.width || 120) * scale;
-          const h = (el.h || el.height || 80) * scale;
+          const x = ((el.x || el.x_coordinate || 0) * scale).toFixed(1);
+          const y = ((el.y || el.y_coordinate || 0) * scale).toFixed(1);
+          const w = ((el.w || el.width || 120) * scale).toFixed(1);
+          const h = ((el.h || el.height || 80) * scale).toFixed(1);
           const z = el.z_index || el.zIndex || 1;
+          const rot = el.rotation || 0;
           const fullSrc = src.startsWith('http') ? src : `${GAME_SERVER}${src}`;
-          return `<div class="design-el" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;z-index:${z}">
-        <img src="${fullSrc}" alt="element" onerror="this.style.display='none'" />
+          return `<div class="design-el" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;z-index:${z};transform:rotate(${rot}deg);transform-origin:center center;">
+        <img src="${fullSrc}" alt="element" loading="lazy" onerror="this.style.visibility='hidden'" style="width:100%;height:100%;object-fit:fill;display:block;" />
       </div>`;
         }).join('');
       } else {
@@ -433,6 +448,8 @@
         integrityBadge = `<span class="integrity-badge fair">Fair Play</span>`;
       }
 
+      const canvasBg = team.canvas_bg_color || "#fff";
+
       body.innerHTML = `
     <div class="dm-header">
       <div class="dm-avatar">${initial}</div>
@@ -441,7 +458,7 @@
         <div class="dm-meta">
           <span>${team.phone || '—'}</span>
           <span>·</span>
-          <span>Unlocked: ${unlocked}/5</span>
+          <span>Unlocked: ${unlocked}/11</span>
           <span>·</span>
           <span>Time: ${timeStr}</span>
         </div>
@@ -462,7 +479,7 @@
         <div class="dm-chip-value small">${submittedAt}</div>
       </div>
     </div>
-    <div class="dm-canvas" style="width:${previewW}px;height:${previewH}px;">
+    <div class="dm-canvas" style="width:${previewW}px;height:${previewH}px;position:relative;overflow:hidden;background:${canvasBg};">
       ${canvasHTML}
     </div>
   `;
@@ -482,10 +499,7 @@
         document.getElementById("stat-total").textContent = stats.total_teams;
         document.getElementById("stat-submitted").textContent = stats.submitted;
         document.getElementById("stat-pending").textContent = stats.pending;
-
-        // Count disqualified
-        const dqCount = allTeams.filter(t => t.is_blocked === 1 || t.is_blocked === true || t.cheated === true).length;
-        document.getElementById("stat-disqualified").textContent = dqCount;
+        document.getElementById("stat-disqualified").textContent = stats.disqualified || 0;
       } catch (e) {
         console.error("Failed to load stats:", e);
       }

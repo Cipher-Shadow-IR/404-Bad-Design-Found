@@ -89,7 +89,13 @@ function hideEnforcementOverlay() {
   if (wrapper) wrapper.style.filter = "none";
 }
 
-function initApp() {
+async function initApp() {
+  const status = await checkSessionStatus();
+  if (status && (status.submitted || status.is_expired)) {
+    enterReviewMode();
+    return;
+  }
+
   initTopbar();
   loadElements();
   initCanvasDragDrop();
@@ -98,6 +104,58 @@ function initApp() {
   loadQuizData();
   scaleCanvas();
   window.addEventListener('resize', scaleCanvas);
+  initColorPalette();
+  await loadDraft();
+}
+
+async function checkSessionStatus() {
+  const teamId = localStorage.getItem("team_id");
+  if (!teamId) return null;
+
+  try {
+    const res = await fetch(`/team-status/${teamId}`);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.error("Session check failed", err);
+  }
+  return null;
+}
+
+function enterReviewMode() {
+  const teamName = localStorage.getItem("team_name");
+  const teamEl = document.getElementById("team-name");
+  if (teamEl) teamEl.textContent = teamName;
+
+  const timerEl = document.getElementById("timer");
+  if (timerEl) {
+    timerEl.textContent = "FINISHED";
+    timerEl.style.color = "var(--green)";
+  }
+
+  // Scale canvas for viewing only
+  scaleCanvas();
+  window.addEventListener('resize', scaleCanvas);
+
+  initColorPalette();
+  loadDraft();
+
+  // Show review banner
+  const existing = document.querySelector(".review-mode-banner");
+  if (!existing) {
+    const banner = document.createElement("div");
+    banner.className = "review-mode-banner";
+    banner.innerHTML = `
+      <div class="rm-content">
+        <i class="fa-solid fa-flag-checkered"></i>
+        <span>Review Mode — Your final design is locked and submitted.</span>
+        <button class="rm-logout" onclick="logout()">Exit Arena</button>
+      </div>
+    `;
+    document.body.appendChild(banner);
+  }
+
+  // Lock interface immediately
+  lockInterface();
 }
 
 /* =========================
@@ -128,6 +186,21 @@ function getCanvasScale() {
   const transform = zone.style.transform;
   const match = transform.match(/scale\(([\d.]+)\)/);
   return match ? parseFloat(match[1]) : 1;
+}
+
+function initColorPalette() {
+  const swatches = document.querySelectorAll(".color-swatch");
+  const dropZone = document.getElementById("drop-zone");
+  
+  swatches.forEach(swatch => {
+    swatch.addEventListener("click", () => {
+      const color = swatch.dataset.color;
+      if (dropZone) dropZone.style.backgroundColor = color;
+      swatches.forEach(s => s.classList.remove("active"));
+      swatch.classList.add("active");
+      saveDraft();
+    });
+  });
 }
 
 function showSecurityWarning(title, message, callback) {
@@ -187,21 +260,23 @@ function initTopbar() {
 
   function updateTimer() {
     const now = Date.now();
-    const elapsed = Math.floor((now - parseInt(startTime)) / 1000);
-    const remaining = totalTime - elapsed;
+    let startTimeInt = parseInt(startTime);
+    if (isNaN(startTimeInt) || startTimeInt <= 0) {
+      startTimeInt = now;
+      localStorage.setItem("start_time", startTimeInt.toString());
+    }
+
+    const elapsed = Math.floor((now - startTimeInt) / 1000);
+    // Clamp remaining between 0 and totalTime to avoid weird glitches
+    const remaining = Math.max(0, Math.min(totalTime, totalTime - elapsed));
 
     // ── Time's up → auto-submit ──
     if (remaining <= 0) {
       timerEl.textContent = "00:00";
       if (!autoSubmitted) {
         autoSubmitted = true;
-        showSecurityWarning(
-          "⏰ TIME'S UP",
-          "Your 20 minutes are over. Your design is being auto-submitted now.",
-          () => { submitDesign(true); }
-        );
-        // Fallback: force submit after 4 seconds even if modal isn't dismissed
-        setTimeout(() => { submitDesign(true); }, 4000);
+        // If inactive or time critical, just submit without modal
+        submitDesign(true); 
       }
       return;
     }
@@ -529,7 +604,7 @@ function showQuizPopup(item, elementCard) {
     return;
   }
 
-  if (questionRow.type === "theory") {
+  if (questionRow.type !== "puzzle") {
     showTheoryPopup(overlay, questionRow, item, elementCard);
   } else {
     showPuzzlePopup(overlay, questionRow, item, elementCard);
@@ -553,13 +628,23 @@ function showTheoryPopup(overlay, questionRow, item, elementCard) {
   const question = questionRow.questionData;
   if (!question) return;
 
+  const typeMeta = {
+    "ui_ux": { icon: "🎨", title: "UI/UX Scenario" },
+    "conditional": { icon: "⚡", title: "Conditional Logic" },
+    "aptitude": { icon: "🧮", title: "Aptitude Challenge" }
+  };
+
+  const meta = typeMeta[questionRow.type] || { icon: "🧠", title: "Design Theory" };
   const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
 
   overlay.innerHTML = `
     <div class="quiz-popup">
       <div class="quiz-popup-header">
-        <span class="quiz-popup-icon">🧠</span>
-        <h3>Unlock: ${formatName(item.src)}</h3>
+        <span class="quiz-popup-icon">${meta.icon}</span>
+        <div class="quiz-header-text">
+            <h3>${meta.title}</h3>
+            <span class="quiz-target">Unlock: ${formatName(item.src)}</span>
+        </div>
       </div>
       <div class="quiz-popup-body">
         <div class="quiz-question-badge">${question.level.toUpperCase()}</div>
@@ -642,7 +727,10 @@ function showPuzzlePopup(overlay, questionRow, item, elementCard) {
     <div class="quiz-popup puzzle-popup">
       <div class="quiz-popup-header">
         <span class="quiz-popup-icon">🧩</span>
-        <h3>Puzzle: Unlock ${formatName(item.src)}</h3>
+        <div class="puzzle-header-row">
+          <h3>Puzzle: Unlock ${formatName(item.src)}</h3>
+          ${gridSize >= 4 ? `<button class="puzzle-info-btn" title="Show Preview">i</button>` : ''}
+        </div>
       </div>
       <div class="quiz-popup-body">
         <div class="quiz-question-badge">${gridSize}×${gridSize} PUZZLE</div>
@@ -769,6 +857,33 @@ function showPuzzlePopup(overlay, questionRow, item, elementCard) {
   };
 
   img.src = puzzleImage;
+
+  // Info button click → show full preview
+  const infoBtn = overlay.querySelector(".puzzle-info-btn");
+  if (infoBtn) {
+    infoBtn.addEventListener("click", () => {
+      showPuzzlePreview(puzzleImage);
+    });
+  }
+}
+
+function showPuzzlePreview(imgSrc) {
+  const overlay = document.createElement("div");
+  overlay.className = "puzzle-preview-overlay";
+  overlay.innerHTML = `
+    <div class="puzzle-preview-content">
+      <img src="${imgSrc}" alt="Puzzle Preview" />
+    </div>
+    <button class="puzzle-preview-close">Close Preview</button>
+  `;
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay || e.target.classList.contains("puzzle-preview-close")) {
+      overlay.remove();
+    }
+  });
+
+  document.body.appendChild(overlay);
 }
 
 /* =========================
@@ -776,12 +891,18 @@ function showPuzzlePopup(overlay, questionRow, item, elementCard) {
 ========================= */
 function unlockElement(elementCard) {
   elementCard.classList.remove("locked");
+  elementCard.classList.remove("failed");
   elementCard.draggable = true;
   elementCard.dataset.locked = "false";
+  elementCard.style.opacity = "";
+  elementCard.style.pointerEvents = "";
   const lockOverlay = elementCard.querySelector(".lock-overlay");
   if (lockOverlay) lockOverlay.remove();
-  const newCard = elementCard.cloneNode(true);
-  elementCard.parentNode.replaceChild(newCard, elementCard);
+  // Re-attach drag since draggable was false
+  elementCard.addEventListener("dragstart", (e) => {
+    e.dataTransfer.setData("text/plain", elementCard.dataset.src);
+    e.dataTransfer.effectAllowed = "copy";
+  }, { once: false });
 }
 
 function lockElementPermanently(elementCard) {
@@ -845,29 +966,50 @@ function updateProgress() {
 }
 
 /* =========================
-   Z-INDEX / LAYER CONTROLS
+   Z-INDEX / LAYER CONTROLS (Improved)
 ========================= */
-let nextZIndex = 10;
+function getAllWrappers() {
+  return Array.from(document.querySelectorAll(".canvas-el-wrapper"));
+}
+
+function getZLimits() {
+  const wrappers = getAllWrappers();
+  if (!wrappers.length) return { min: 1, max: 1 };
+  const indices = wrappers.map(w => parseInt(w.style.zIndex) || 1);
+  return { min: Math.min(...indices), max: Math.max(...indices) };
+}
 
 function bringToFront(wrapper) {
-  nextZIndex++;
-  wrapper.style.zIndex = nextZIndex;
+  const { max } = getZLimits();
+  wrapper.style.zIndex = max + 1;
 }
 
 function sendToBack(wrapper) {
-  // Set to 1, push everything else up
-  wrapper.style.zIndex = 1;
+  const { min } = getZLimits();
+  const targetMin = Math.max(1, min - 1);
+  wrapper.style.zIndex = targetMin;
+  
+  // If we just hit 1, we might need to shift others up to keep this one uniquely at the bottom
+  if (targetMin === 1) {
+    getAllWrappers().forEach(w => {
+      if (w !== wrapper) {
+        const cur = parseInt(w.style.zIndex) || 1;
+        if (cur <= 1) w.style.zIndex = cur + 1;
+      }
+    });
+  }
 }
 
 function bringForward(wrapper) {
   const cur = parseInt(wrapper.style.zIndex) || 1;
   wrapper.style.zIndex = cur + 1;
-  nextZIndex = Math.max(nextZIndex, cur + 1);
+  saveDraft();
 }
 
 function sendBackward(wrapper) {
   const cur = parseInt(wrapper.style.zIndex) || 1;
   wrapper.style.zIndex = Math.max(1, cur - 1);
+  saveDraft();
 }
 
 function selectElement(wrapper) {
@@ -963,15 +1105,21 @@ function showLayerToolbar(wrapper) {
   document.body.appendChild(toolbar);
 }
 
-function createCanvasElement(src, x, y) {
+function createCanvasElement(src, x, y, options = {}) {
   const dropZone = document.getElementById("drop-zone");
 
   const wrapper = document.createElement("div");
   wrapper.className = "canvas-el-wrapper";
   wrapper.style.left = x + "px";
   wrapper.style.top = y + "px";
-  wrapper.style.width = "120px";
-  wrapper.style.height = "80px";
+  wrapper.style.width = options.width || "120px";
+  wrapper.style.height = options.height || "80px";
+  wrapper.style.zIndex = options.zIndex || 1;
+
+  if (options.rotation) {
+    wrapper.style.transform = `rotate(${options.rotation}deg)`;
+    wrapper.dataset.rotation = options.rotation;
+  }
 
   const img = document.createElement("img");
   img.src = src;
@@ -985,7 +1133,10 @@ function createCanvasElement(src, x, y) {
     e.stopPropagation();
     wrapper.remove();
     if (selectedElement === wrapper) selectedElement = null;
+    const tb = document.getElementById("layer-toolbar");
+    if (tb) tb.remove();
     updateProgress();
+    saveDraft();
   });
 
   // Resize handles — 4 corners + 4 edges for free stretch
@@ -1001,8 +1152,22 @@ function createCanvasElement(src, x, y) {
     wrapper.appendChild(handle);
   });
 
+  // Rotation Handle
+  const rotHandle = document.createElement("div");
+  rotHandle.className = "rotate-handle";
+  rotHandle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`;
+  rotHandle.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    initRotate(wrapper, e);
+  });
+  wrapper.appendChild(rotHandle);
+
   wrapper.appendChild(img);
   wrapper.appendChild(delBtn);
+
+  // Initial state tracking
+  wrapper.dataset.rotation = "0";
 
   // Click to select
   wrapper.addEventListener("mousedown", (e) => {
@@ -1015,21 +1180,29 @@ function createCanvasElement(src, x, y) {
   dropZone.appendChild(wrapper);
   selectElement(wrapper);
   updateProgress();
+  saveDraft();
 }
 
+let _dragDropInitialized = false;
+
 function initCanvasDragDrop() {
+  if (_dragDropInitialized) return;
+  _dragDropInitialized = true;
+
   const dropZone = document.getElementById("drop-zone");
 
-  // Drag start from sidebar — only free elements
-  document.addEventListener("dragstart", e => {
+  // Drag start from sidebar — only free/unlocked elements
+  // Attach to the elements-container, not document, to avoid global contamination
+  document.getElementById("elements-container").addEventListener("dragstart", e => {
     const el = e.target.closest(".element");
-    if (el && el.dataset.locked !== "true") {
-      const src = el.dataset.src;
-      e.dataTransfer.setData("text/plain", src);
-      e.dataTransfer.effectAllowed = "copy";
-    } else if (el && el.dataset.locked === "true") {
+    if (!el) return;
+    if (el.dataset.locked === "true") {
       e.preventDefault();
+      return;
     }
+    const src = el.dataset.src;
+    e.dataTransfer.setData("text/plain", src);
+    e.dataTransfer.effectAllowed = "copy";
   });
 
   dropZone.addEventListener("dragover", e => {
@@ -1053,7 +1226,6 @@ function initCanvasDragDrop() {
 
     const scale = getCanvasScale();
     const rect = dropZone.getBoundingClientRect();
-    // Divide by scale to convert from screen pixels to canvas logical pixels
     const x = (e.clientX - rect.left) / scale - 60;
     const y = (e.clientY - rect.top) / scale - 40;
 
@@ -1065,35 +1237,44 @@ function initCanvasDragDrop() {
    MOVE ELEMENTS ON CANVAS
 ========================= */
 function initMove(wrapper, startEvent) {
-  const dropZone = document.getElementById("drop-zone");
   const scale = getCanvasScale();
 
   const startX = startEvent.clientX;
   const startY = startEvent.clientY;
   const origLeft = parseInt(wrapper.style.left) || 0;
   const origTop = parseInt(wrapper.style.top) || 0;
+  // Use the logical canvas size (960x540). Clamp so elements with rotation
+  // handles don't escape. Give a small padding.  
+  const CANVAS_W = 960;
+  const CANVAS_H = 540;
+  let rafId = null;
 
   function onMove(e) {
-    // Divide mouse delta by scale to get logical canvas movement
-    const dx = (e.clientX - startX) / scale;
-    const dy = (e.clientY - startY) / scale;
+    if (rafId) return; // skip if a frame is already pending
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      const dx = (e.clientX - startX) / scale;
+      const dy = (e.clientY - startY) / scale;
 
-    let newLeft = origLeft + dx;
-    let newTop = origTop + dy;
+      let newLeft = origLeft + dx;
+      let newTop = origTop + dy;
 
-    // Clamp to logical canvas size (960×540)
-    const maxLeft = 960 - wrapper.offsetWidth;
-    const maxTop = 540 - wrapper.offsetHeight;
-    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-    newTop = Math.max(0, Math.min(newTop, maxTop));
+      // Clamp within logical canvas
+      const elW = parseInt(wrapper.style.width) || wrapper.offsetWidth || 120;
+      const elH = parseInt(wrapper.style.height) || wrapper.offsetHeight || 80;
+      newLeft = Math.max(0, Math.min(newLeft, CANVAS_W - elW));
+      newTop  = Math.max(0, Math.min(newTop,  CANVAS_H - elH));
 
-    wrapper.style.left = newLeft + "px";
-    wrapper.style.top = newTop + "px";
+      wrapper.style.left = newLeft + "px";
+      wrapper.style.top  = newTop  + "px";
+    });
   }
 
   function onUp() {
+    if (rafId) cancelAnimationFrame(rafId);
     document.removeEventListener("mousemove", onMove);
     document.removeEventListener("mouseup", onUp);
+    saveDraft();
   }
 
   document.addEventListener("mousemove", onMove);
@@ -1112,43 +1293,81 @@ function initResize(wrapper, handlePos, startEvent) {
   const startLeft = parseInt(wrapper.style.left) || 0;
   const startTop = parseInt(wrapper.style.top) || 0;
   const scale = getCanvasScale();
-
   const MIN_SIZE = 8;
+  let rafId = null;
 
   function onMove(e) {
-    const dx = (e.clientX - startX) / scale;
-    const dy = (e.clientY - startY) / scale;
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      const dx = (e.clientX - startX) / scale;
+      const dy = (e.clientY - startY) / scale;
 
-    let newW = startW;
-    let newH = startH;
-    let newLeft = startLeft;
-    let newTop = startTop;
+      let newW = startW;
+      let newH = startH;
+      let newLeft = startLeft;
+      let newTop = startTop;
 
-    // Horizontal component
-    if (handlePos.includes("r")) {
-      newW = Math.max(MIN_SIZE, startW + dx);
-    } else if (handlePos.includes("l")) {
-      newW = Math.max(MIN_SIZE, startW - dx);
-      newLeft = startLeft + (startW - newW);
-    }
+      if (handlePos.includes("r")) {
+        newW = Math.max(MIN_SIZE, startW + dx);
+      } else if (handlePos.includes("l")) {
+        newW = Math.max(MIN_SIZE, startW - dx);
+        newLeft = startLeft + (startW - newW);
+      }
 
-    // Vertical component
-    if (handlePos.includes("b")) {
-      newH = Math.max(MIN_SIZE, startH + dy);
-    } else if (handlePos.includes("t")) {
-      newH = Math.max(MIN_SIZE, startH - dy);
-      newTop = startTop + (startH - newH);
-    }
+      if (handlePos.includes("b")) {
+        newH = Math.max(MIN_SIZE, startH + dy);
+      } else if (handlePos.includes("t")) {
+        newH = Math.max(MIN_SIZE, startH - dy);
+        newTop = startTop + (startH - newH);
+      }
 
-    wrapper.style.width = newW + "px";
-    wrapper.style.height = newH + "px";
-    wrapper.style.left = newLeft + "px";
-    wrapper.style.top = newTop + "px";
+      wrapper.style.width  = newW   + "px";
+      wrapper.style.height = newH   + "px";
+      wrapper.style.left   = newLeft + "px";
+      wrapper.style.top    = newTop  + "px";
+    });
   }
 
   function onUp() {
+    if (rafId) cancelAnimationFrame(rafId);
     document.removeEventListener("mousemove", onMove);
     document.removeEventListener("mouseup", onUp);
+    saveDraft();
+  }
+
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
+}
+
+/* =========================
+   ROTATION (Canva Style)
+========================= */
+function initRotate(wrapper, startEvent) {
+  const rect = wrapper.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  let rafId = null;
+
+  function onMove(e) {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      const dx = e.clientX - centerX;
+      const dy = e.clientY - centerY;
+      let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      angle = (angle + 90) % 360;
+      if (e.shiftKey) angle = Math.round(angle / 15) * 15;
+      wrapper.dataset.rotation = angle.toFixed(1);
+      wrapper.style.transform = `rotate(${angle.toFixed(1)}deg)`;
+    });
+  }
+
+  function onUp() {
+    if (rafId) cancelAnimationFrame(rafId);
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    saveDraft();
   }
 
   document.addEventListener("mousemove", onMove);
@@ -1158,7 +1377,12 @@ function initResize(wrapper, handlePos, startEvent) {
 /* =========================
    CANVAS INTERACTION
 ========================= */
+let _canvasInteractionInitialized = false;
+
 function initCanvasInteraction() {
+  if (_canvasInteractionInitialized) return;
+  _canvasInteractionInitialized = true;
+
   const dropZone = document.getElementById("drop-zone");
 
   // Click empty canvas → deselect all
@@ -1176,6 +1400,7 @@ function initCanvasInteraction() {
       const tb = document.getElementById("layer-toolbar");
       if (tb) tb.remove();
       updateProgress();
+      saveDraft();
     }
   });
 }
@@ -1251,6 +1476,99 @@ function initSecurity() {
 }
 
 /* =========================
+   DRAFT PERSISTENCE
+========================= */
+let isRestoring = false;
+
+async function saveDraft() {
+  if (isRestoring) return;
+  const teamId = localStorage.getItem("team_id");
+  if (!teamId) return;
+
+  const dropZone = document.getElementById("drop-zone");
+  if (!dropZone) return;
+
+  const canvasElements = dropZone.querySelectorAll(".canvas-el-wrapper");
+  const elementsData = Array.from(canvasElements).map(el => ({
+    element_src: el.querySelector("img").src.replace(window.location.origin, ""),
+    x_coordinate: parseInt(el.style.left) || 0,
+    y_coordinate: parseInt(el.style.top) || 0,
+    width: el.style.width,
+    height: el.style.height,
+    z_index: el.style.zIndex || 1,
+    rotation: parseFloat(el.dataset.rotation) || 0
+  }));
+
+  const draftPayload = {
+    team_id: teamId,
+    layout_json: JSON.stringify({
+      canvas_bg_color: dropZone.style.backgroundColor || "#ffffff",
+      canvas_elements: elementsData
+    })
+  };
+
+  try {
+    await fetch("/draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draftPayload)
+    });
+  } catch (err) {
+    console.error("Draft save failed", err);
+  }
+}
+
+async function loadDraft() {
+  const teamId = localStorage.getItem("team_id");
+  if (!teamId) return;
+
+  try {
+    const res = await fetch(`/draft/${teamId}`);
+    const data = await res.json();
+    if (data && data.layout_json) {
+      const layout = JSON.parse(data.layout_json);
+      const dropZone = document.getElementById("drop-zone");
+      
+      isRestoring = true;
+
+      if (layout.canvas_bg_color && dropZone) {
+        dropZone.style.backgroundColor = layout.canvas_bg_color;
+        // Update swatch
+        document.querySelectorAll(".color-swatch").forEach(swatch => {
+          if (swatch.dataset.color === layout.canvas_bg_color) {
+            swatch.classList.add("active");
+          } else {
+            swatch.classList.remove("active");
+          }
+        });
+      }
+
+      if (layout.canvas_elements && layout.canvas_elements.length > 0) {
+        // Clear existing just in case
+        dropZone.querySelectorAll(".canvas-el-wrapper").forEach(el => el.remove());
+        
+        layout.canvas_elements.forEach(el => {
+          createCanvasElement(el.element_src, el.x_coordinate, el.y_coordinate, {
+            width: el.width,
+            height: el.height,
+            zIndex: el.z_index,
+            rotation: el.rotation
+          });
+        });
+        
+        // Deselect any auto-selected last element
+        selectElement(null);
+      }
+      
+      isRestoring = false;
+    }
+  } catch (err) {
+    isRestoring = false;
+    console.error("Draft load failed", err);
+  }
+}
+
+/* =========================
    SUBMISSION
 ========================= */
 async function submitDesign(isForced = false) {
@@ -1272,17 +1590,21 @@ async function submitDesign(isForced = false) {
     y_coordinate: parseInt(el.style.top) || 0,
     width: parseInt(el.style.width) || el.offsetWidth || 120,
     height: parseInt(el.style.height) || el.offsetHeight || 80,
-    z_index: parseInt(el.style.zIndex) || 1
+    z_index: parseInt(el.style.zIndex) || 1,
+    rotation: parseFloat(el.dataset.rotation) || 0
   }));
 
+  // Always submit with LOGICAL canvas dimensions (960x540).
+  // dropRect.width would be the CSS-scaled size which is wrong.
   const payload = {
     team_id: teamId,
     team_name: teamName,
     submission_timestamp: now,
     submitted: true,
     time_taken_seconds: timeTakenSeconds,
-    canvas_width: dropRect.width,
-    canvas_height: dropRect.height,
+    canvas_width: 960,
+    canvas_height: 540,
+    canvas_bg_color: dropZone.style.backgroundColor || "#ffffff",
     quiz: {
       total_attempted: quizAttempted,
       total_correct: quizCorrect
@@ -1306,10 +1628,10 @@ async function submitDesign(isForced = false) {
         showSecurityWarning(
           "✅ SUBMISSION SUCCESSFUL",
           `Your design has been submitted! Time taken: ${Math.floor(timeTakenSeconds / 60)}m ${timeTakenSeconds % 60}s. Quiz: ${quizCorrect}/${quizAttempted} correct. Thank you for participating!`,
-          () => { logout(); }
+          () => { enterReviewMode(); }
         );
       } else {
-        logout();
+        enterReviewMode();
       }
     } else {
       const data = await res.json();
@@ -1389,4 +1711,3 @@ document.getElementById("submit-btn")?.addEventListener("click", () => {
     setTimeout(() => modal.remove(), 300);
   });
 });
-

@@ -15,6 +15,34 @@ app.get("/", (req, res) => {
     res.redirect("/Auth/login.html");
 });
 
+app.get("/team-status/:team_id", (req, res) => {
+    const teamId = req.params.team_id;
+    db.get(
+        `SELECT id, team_name, start_time, submitted, is_blocked 
+         FROM teams WHERE id = ?`,
+        [teamId],
+        (err, team) => {
+            if (err || !team) {
+                return res.status(404).json({ message: "Team not found" });
+            }
+
+            const totalTime = 20 * 60 * 1000; // 20 mins
+            const now = Date.now();
+            const elapsed = team.start_time ? (now - team.start_time) : 0;
+            const remaining = Math.max(0, totalTime - elapsed);
+            const isExpired = !team.submitted && elapsed > totalTime;
+
+            res.json({
+                id: team.id,
+                submitted: team.submitted == 1,
+                is_blocked: team.is_blocked == 1,
+                remaining_ms: remaining,
+                is_expired: isExpired
+            });
+        }
+    );
+});
+
 app.post("/login", (req, res) => {
     const { team_name, phone } = req.body;
 
@@ -104,7 +132,8 @@ app.get("/admin/teams", (req, res) => {
     db.all(
         `SELECT t.id, t.team_name, t.phone, t.start_time, t.submitted,
                 t.cheat_count, t.is_blocked,
-                s.layout_json, s.unlocked_count, s.created_at AS submission_time
+                s.layout_json, s.unlocked_count, s.created_at AS submission_time,
+                (SELECT COUNT(*) FROM team_questions WHERE team_id = t.id AND correct = 1) AS live_unlocked
          FROM teams t
          LEFT JOIN submissions s ON t.id = s.team_id`,
         [],
@@ -138,7 +167,8 @@ app.get("/admin/teams", (req, res) => {
                     submission_time_readable: team.submission_time
                         ? new Date(team.submission_time).toLocaleString()
                         : null,
-                    unlocked_count: team.unlocked_count || 0,
+                    unlocked_count: team.unlocked_count !== null ? team.unlocked_count : (team.live_unlocked || 0),
+                    is_expired: !team.submitted && team.start_time && (Date.now() - team.start_time > 20 * 60 * 1000),
                     ...(submissionData || {})
                 };
             });
@@ -238,13 +268,16 @@ const hardPool = allQuestions.filter(q => q.level === "hard" || q.level === "adv
 
 const puzzleImages = [
     "/Assets/Puzzles/BurningCar.jpeg",
-    "/Assets/Puzzles/Car.jpeg",
     "/Assets/Puzzles/NYTrain.jpeg",
     "/Assets/Puzzles/NightmareDrawing.jpeg",
     "/Assets/Puzzles/Paris.jpeg",
     "/Assets/Puzzles/SeaTrain.jpeg",
     "/Assets/Puzzles/StarryDisk.jpeg",
 ];
+
+const uiPool = allQuestions.filter(q => q.type === "ui_ux");
+const condPool = allQuestions.filter(q => q.type === "conditional");
+const aptPool = allQuestions.filter(q => q.type === "aptitude");
 
 function shuffle(arr) {
     const a = [...arr];
@@ -255,39 +288,45 @@ function shuffle(arr) {
     return a;
 }
 
-/* The 11 locked element names — must match /elements response */
-const LOCKED_ELEMENT_NAMES = [
-    "buy_now_button",
-    "hamburger",
-    "slider",
-    "wishlist",
-    "sale",
-    "404_rbg",
-    "electronics",
-    "home_decor",
-    "kids",
-    "men",
-    "women"
-];
+// 11 fixed locked elements. If the user wants 12, they can add one to the folder.
+// The logic below will dynamically handle whatever is in the locked_elements folder.
+const LOCKED_ELEMENTS_DIR = path.join(__dirname, "public", "Assets", "Elements", "locked_elements");
+let LOCKED_ELEMENT_NAMES = [];
+try {
+    LOCKED_ELEMENT_NAMES = fs.readdirSync(LOCKED_ELEMENTS_DIR)
+        .filter(f => /\.(png|jpe?g|webp)$/i.test(f))
+        .map(f => f.replace(/\.(png|jpe?g|webp)$/i, ""));
+} catch (e) {
+    console.error("Error reading locked elements:", e);
+    LOCKED_ELEMENT_NAMES = ["buy_now_button", "hamburger", "slider", "wishlist", "sale", "404_rbg", "electronics", "home_decor", "kids", "men", "women"];
+}
+
 
 /* =========================
    GET /quiz/:team_id
    Assigns 1 unique question per locked element.
    Uses db.serialize() to prevent race conditions with 50 concurrent users.
-========================= */
+ ========================= */
 app.get("/quiz/:team_id", (req, res) => {
     const teamId = parseInt(req.params.team_id);
     if (isNaN(teamId)) return res.status(400).json({ message: "Invalid team_id" });
 
+    // Refresh dynamic element names in case files were added
+    try {
+        LOCKED_ELEMENT_NAMES = fs.readdirSync(LOCKED_ELEMENTS_DIR)
+            .filter(f => /\.(png|jpe?g|webp)$/i.test(f))
+            .map(f => f.replace(/\.(png|jpe?g|webp)$/i, ""));
+    } catch (e) {
+        console.error("Error refreshing locked elements:", e);
+    }
+
     db.serialize(() => {
-        // 1. Check if questions already assigned for this team
         db.all("SELECT * FROM team_questions WHERE team_id = ?", [teamId], (err, rows) => {
             if (err) return res.status(500).json({ message: "Database error" });
 
-            if (rows && rows.length >= LOCKED_ELEMENT_NAMES.length) {
-                // Already assigned — return them with question data
+            if (rows && rows.length > 0) {
                 const questions = rows.map(row => {
-                    if (row.type === "theory") {
+                    if (row.type !== "puzzle") {
                         const q = allQuestions.find(q => q.id === row.question_id);
                         return { ...row, questionData: q || null };
                     }
@@ -296,95 +335,134 @@ app.get("/quiz/:team_id", (req, res) => {
                 return res.json(questions);
             }
 
-            // Clean up incomplete assignments
-            if (rows && rows.length > 0 && rows.length < LOCKED_ELEMENT_NAMES.length) {
-                db.run("DELETE FROM team_questions WHERE team_id = ?", [teamId]);
-            }
-
-            // 2. First time — assign 1 question per locked element
-            db.all("SELECT question_id FROM team_questions WHERE type = 'theory'", [], (err2, usedRows) => {
+            db.all("SELECT question_id, type FROM team_questions", [], (err2, usedRows) => {
                 if (err2) return res.status(500).json({ message: "Database error" });
 
                 const usedIds = new Set((usedRows || []).map(r => r.question_id));
 
-                const availEasy = easyPool.filter(q => !usedIds.has(q.id));
-                const availMedium = mediumPool.filter(q => !usedIds.has(q.id));
-                const availHard = hardPool.filter(q => !usedIds.has(q.id));
-
-                const pickOne = (pool, fallback) => {
-                    if (pool.length > 0) {
-                        const idx = Math.floor(Math.random() * pool.length);
-                        const picked = pool[idx];
-                        pool.splice(idx, 1); // remove so next pick is different
-                        return picked;
-                    }
-                    if (fallback.length > 0) return fallback[Math.floor(Math.random() * fallback.length)];
-                    return null;
+                const pickPool = (pool, count, used) => {
+                    const avail = pool.filter(q => !used.has(q.id));
+                    const picked = shuffle(avail.length >= count ? avail : pool).slice(0, count);
+                    return picked;
                 };
 
-                // Pick 7 theory questions: 60% easy (4), 30% medium (2), 10% hard (1)
-                const theoryPicks = [
-                    pickOne(availEasy, easyPool),
-                    pickOne(availEasy, easyPool),
-                    pickOne(availEasy, easyPool),
-                    pickOne(availEasy, easyPool),
-                    pickOne(availMedium, mediumPool),
-                    pickOne(availMedium, mediumPool),
-                    pickOne(availHard, hardPool)
-                ];
-
-                if (theoryPicks.some(p => !p)) {
-                    return res.status(500).json({ message: "Not enough questions available" });
+                const totalNeeded = LOCKED_ELEMENT_NAMES.length;
+                
+                // Distribution for 12 items: 6 ui, 3 puzzle, 2 cond, 1 apt
+                // Adjust dynamically if less/more than 12
+                let numPuzzles = 3;
+                let numCond = Math.min(2, Math.max(0, totalNeeded - 9)); // try to keep at least 2 if possible
+                let numApt = Math.min(1, Math.max(0, totalNeeded - (6 + 3 + 2))); 
+                
+                // For 11 elements: 5 UI/UX, 3 Puzzle, 2 Cond, 1 Apt
+                let numUI = totalNeeded - numPuzzles - numCond - numApt;
+                if (totalNeeded === 11) {
+                    numUI = 5; numPuzzles = 3; numCond = 2; numApt = 1;
+                } else if (totalNeeded === 12) {
+                    numUI = 6; numPuzzles = 3; numCond = 2; numApt = 1;
+                } else {
+                    // Fallback distribution
+                    numPuzzles = Math.min(3, totalNeeded);
+                    numCond = Math.min(2, totalNeeded - numPuzzles);
+                    numApt = Math.min(1, totalNeeded - numPuzzles - numCond);
+                    numUI = Math.max(0, totalNeeded - numPuzzles - numCond - numApt);
                 }
 
-                // Pick 4 different puzzle images (we have 7 available)
-                const shuffledPuzzles = shuffle(puzzleImages);
+                const uiPicks = pickPool(uiPool, numUI, usedIds);
+                const condPicks = pickPool(condPool, numCond, usedIds);
+                const aptPicks = pickPool(aptPool, numApt, usedIds);
 
-                // Build assignment: element_name → question
-                // Shuffle locked element order so assignment is randomized
-                const shuffledElements = shuffle(LOCKED_ELEMENT_NAMES);
-                const assignments = [
-                    // 7 theory
-                    { element: shuffledElements[0], type: "theory", qId: theoryPicks[0].id, grid: null, img: null },
-                    { element: shuffledElements[1], type: "theory", qId: theoryPicks[1].id, grid: null, img: null },
-                    { element: shuffledElements[2], type: "theory", qId: theoryPicks[2].id, grid: null, img: null },
-                    { element: shuffledElements[3], type: "theory", qId: theoryPicks[3].id, grid: null, img: null },
-                    { element: shuffledElements[4], type: "theory", qId: theoryPicks[4].id, grid: null, img: null },
-                    { element: shuffledElements[5], type: "theory", qId: theoryPicks[5].id, grid: null, img: null },
-                    { element: shuffledElements[6], type: "theory", qId: theoryPicks[6].id, grid: null, img: null },
-                    // 4 puzzle: 2×3x3, 1×4x4, 1×5x5
-                    { element: shuffledElements[7], type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[0] },
-                    { element: shuffledElements[8], type: "puzzle", qId: null, grid: 3, img: shuffledPuzzles[1] },
-                    { element: shuffledElements[9], type: "puzzle", qId: null, grid: 4, img: shuffledPuzzles[2] },
-                    { element: shuffledElements[10], type: "puzzle", qId: null, grid: 5, img: shuffledPuzzles[3] },
+                const theoryPicks = [
+                    ...uiPicks.map(p => ({ ...p, type: "ui_ux" })),
+                    ...condPicks.map(p => ({ ...p, type: "conditional" })),
+                    ...aptPicks.map(p => ({ ...p, type: "aptitude" }))
                 ];
+
+                const shuffledPuzzles = shuffle(puzzleImages);
+                const shuffledElements = shuffle(LOCKED_ELEMENT_NAMES);
+                const assignments = [];
+
+                // Assign theory questions
+                for (let i = 0; i < theoryPicks.length; i++) {
+                    assignments.push({
+                        element: shuffledElements[i],
+                        type: theoryPicks[i].type,
+                        qId: theoryPicks[i].id,
+                        grid: null,
+                        img: null
+                    });
+                }
+
+                // Assign puzzles
+                const puzzleGrids = [3, 4, 5]; // Rotate grids
+                for (let i = 0; i < numPuzzles; i++) {
+                    const elIdx = theoryPicks.length + i;
+                    if (elIdx < shuffledElements.length) {
+                        assignments.push({
+                            element: shuffledElements[elIdx],
+                            type: "puzzle",
+                            qId: null,
+                            grid: puzzleGrids[i % 3], 
+                            img: shuffledPuzzles[i % shuffledPuzzles.length]
+                        });
+                    }
+                }
 
                 const stmt = db.prepare(
                     "INSERT INTO team_questions (team_id, element_name, question_id, type, grid_size, puzzle_image) VALUES (?, ?, ?, ?, ?, ?)"
                 );
-
                 assignments.forEach(a => {
                     stmt.run(teamId, a.element, a.qId, a.type, a.grid, a.img);
                 });
-
                 stmt.finalize(() => {
                     db.all("SELECT * FROM team_questions WHERE team_id = ?", [teamId], (err3, newRows) => {
-                        if (err3) return res.status(500).json({ message: "Database error" });
-
-                        const questions = newRows.map(row => {
-                            if (row.type === "theory") {
+                        const final = newRows.map(row => {
+                            if (row.type !== "puzzle") {
                                 const q = allQuestions.find(q => q.id === row.question_id);
                                 return { ...row, questionData: q || null };
                             }
                             return row;
                         });
-                        return res.json(questions);
+                        res.json(final);
                     });
                 });
             });
         });
     });
 });
+
+/* =========================
+   PERSISTENCE: DRAFTS
+========================= */
+app.post("/draft", (req, res) => {
+    const { team_id, layout_json } = req.body;
+    if (!team_id || !layout_json) {
+        return res.status(400).json({ message: "Missing draft data" });
+    }
+
+    db.run(
+        "INSERT INTO drafts (team_id, layout_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(team_id) DO UPDATE SET layout_json = excluded.layout_json, updated_at = CURRENT_TIMESTAMP",
+        [team_id, layout_json],
+        (err) => {
+            if (err) {
+                console.error("Draft save error:", err);
+                return res.status(500).json({ message: "Failed to save draft" });
+            }
+            res.json({ message: "Draft saved" });
+        }
+    );
+});
+
+app.get("/draft/:team_id", (req, res) => {
+    const teamId = req.params.team_id;
+    db.get("SELECT layout_json FROM drafts WHERE team_id = ?", [teamId], (err, row) => {
+        if (err || !row) {
+            return res.json({ layout_json: null });
+        }
+        res.json(row);
+    });
+});
+
 
 /* =========================
    POST /quiz/answer
@@ -451,7 +529,7 @@ app.post("/cheat", (req, res) => {
 
 
 app.post("/submit", (req, res) => {
-    const { team_id, team_name, submission_timestamp, time_taken_seconds, quiz, canvas_elements, canvas_width, canvas_height } = req.body;
+    const { team_id, team_name, submission_timestamp, time_taken_seconds, quiz, canvas_elements, canvas_width, canvas_height, canvas_bg_color } = req.body;
 
     if (!team_id || !quiz || !canvas_elements) {
         return res.status(400).json({ message: "Missing submission data" });
@@ -482,6 +560,7 @@ app.post("/submit", (req, res) => {
                 cheat_count: team.cheat_count || 0,
                 canvas_width: canvas_width || null,
                 canvas_height: canvas_height || null,
+                canvas_bg_color: canvas_bg_color || "#ffffff",
                 canvas_elements: canvas_elements || []
             };
 

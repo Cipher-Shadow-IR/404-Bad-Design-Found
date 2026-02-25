@@ -80,6 +80,18 @@ db.run(`
     `);
 
     // ===============================
+    // DRAFTS TABLE (Auto-save canvas state)
+    // ===============================
+    db.run(`
+        CREATE TABLE IF NOT EXISTS drafts (
+            team_id INTEGER PRIMARY KEY,
+            layout_json TEXT NOT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (team_id) REFERENCES teams(id)
+        )
+    `);
+
+    // ===============================
     // SUBMISSIONS TABLE
     // ===============================
     db.run(`
