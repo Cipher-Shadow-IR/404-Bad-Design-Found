@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static(__dirname)); // serve index.html, styles.css, etc.
 
 // ====== BASE URL for 404-Not-Found-Webapp ======
-const GAME_API = process.env.GAME_API_URL || "http://localhost:3000";
+const GAME_API = process.env.GAME_API_URL || "http://10.1.26.252:3000";
 
 // ==========================================
 //   GET /admin/api/teams
