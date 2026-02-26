@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard — 404: Bad Design Found</title>
-  <link rel="icon" type="image/jpeg" href="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png">
+  <link rel="icon" type="image/png" href="404BDNF_logo.png">
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -16,7 +16,7 @@
     <!-- ====== TOPBAR (matches builder) ====== -->
     <header class="topbar">
       <div class="brand">
-        <div class="logo"><img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png" alt="Logo">
+        <div class="logo"><img src="404BDNF_logo.png" alt="Logo">
         </div>
         <div class="brand-text">
           <div class="title">ADMIN PANEL</div>
@@ -208,8 +208,17 @@
   </div>
 
   <script>
-    const API = "http://localhost:4000";
-    const GAME_SERVER = "http://localhost:3000";
+    // ======= NETWORK CONFIGURATION =======
+    // If you use Localhost.run, put your tunnel URL here.
+    // Example: "https://404bdf-admin.lhr.life" (if you tunnel port 4000)
+    // For now, these are set to work with your local port 3000/4000
+    const CONFIG = {
+      API_SERVER: "http://localhost:4000",   // The Admin Webapp itself
+      GAME_SERVER: "http://localhost:3000"   // The main Game Webapp
+    };
+
+    const API = CONFIG.API_SERVER;
+    const GAME_SERVER = CONFIG.GAME_SERVER;
     let allTeams = [];
     let currentTab = "all";
 

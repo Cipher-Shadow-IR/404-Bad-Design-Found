@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404: Bad Design Found</title>
-    <link rel="icon" type="image/png" href="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png">
+    <link rel="icon" type="image/png" href="Assets/404BDNF_logo.png">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
     <div id="preloader">
         <div class="loader-content">
             <div class="logo-box">
-                <img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png" alt="Logo" class="loader-logo">
+                <img src="Assets/404BDNF_logo.png" alt="Logo" class="loader-logo">
             </div>
             <div class="glitch-text" data-text="LOADING CHALLENGE...">LOADING CHALLENGE...</div>
         </div>
@@ -34,20 +34,22 @@
 
     <!-- BACKGROUND EFFECTS -->
     <div class="bg-glow"></div>
+    <div class="organic-blob blob-1"></div>
+    <div class="organic-blob blob-2"></div>
     <div class="bg-grid"></div>
 
     <!-- NAVIGATION -->
     <nav class="glass-nav">
         <div class="container">
             <div class="nav-brand">
-                <img src="http://localhost:3000/Assets/Elements/free_elements/404BDNF_logo.png" alt="Logo">
+                <img src="Assets/404BDNF_logo.png" alt="Logo">
                 <span>404: Bad Design Found</span>
             </div>
             <div class="nav-links">
                 <a href="#about">About</a>
                 <a href="#workflow">Workflow</a>
                 <a href="#tech">Techstack</a>
-                <a href="http://localhost:3000" class="btn btn-primary">Enter Arena</a>
+                <a href="#" class="btn btn-primary arena-redirect">Enter Arena</a>
             </div>
             <div class="nav-toggle">
                 <span></span>
@@ -64,7 +66,7 @@
                 <h1>Where <span class="text-glow">Bad Design</span><br>is the Best Design.</h1>
                 <p class="lead">The ultimate battle for UI/UX Designers where creativity meets chaos. Can you build the most usable "bad" design?</p>
                 <div class="hero-btns">
-                    <a href="http://localhost:3000" class="btn btn-large btn-glow-primary">Launch Experience</a>
+                    <a href="#" class="btn btn-large btn-glow-primary arena-redirect">Launch Experience</a>
                     <a href="#about" class="btn btn-secondary">Learn More</a>
                 </div>
             </div>
@@ -234,7 +236,28 @@
         </div>
     </footer>
 
+    <!-- SVG Filters -->
+    <svg style="display: none;">
+      <defs>
+        <filter id="liquid">
+          <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+        </filter>
+      </defs>
+    </svg>
+
     <!-- Scripts -->
+    <script>
+        // ======= NETWORK CONFIGURATION =======
+        // Replace this with your Localhost.run URL or your actual College IP
+        const CONFIG = {
+            GAME_SERVER_URL: "http://localhost:3000" // e.g., "https://404bdf-txe.lhr.life"
+        };
+
+        document.querySelectorAll('.arena-redirect').forEach(el => {
+            el.href = CONFIG.GAME_SERVER_URL;
+        });
+    </script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="script.js"></script>
 </body>

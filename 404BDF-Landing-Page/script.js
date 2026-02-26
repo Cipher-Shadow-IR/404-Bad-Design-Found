@@ -21,25 +21,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500); // Give it some time to show the logo
     });
 
-    // 3. CUSTOM CURSOR
+    // 3. CUSTOM CURSOR & MAGNETIC EFFECT
     const cursor = document.querySelector('.cursor');
     const follower = document.querySelector('.cursor-follower');
     
     document.addEventListener('mousemove', (e) => {
-        cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-        follower.style.transform = `translate3d(${e.clientX - 16}px, ${e.clientY - 16}px, 0)`;
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+        
+        follower.animate({
+            left: `${e.clientX}px`,
+            top: `${e.clientY}px`
+        }, { duration: 500, fill: "forwards" });
     });
 
-    // Hover effects for links/buttons
-    const interactiveElements = document.querySelectorAll('a, button, .interactive');
-    interactiveElements.forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            follower.style.transform += ' scale(2)';
-            follower.style.backgroundColor = 'rgba(124, 108, 255, 0.15)';
+    const magneticElements = document.querySelectorAll('.btn, .dev-social a, .nav-links a');
+    
+    magneticElements.forEach(el => {
+        el.addEventListener('mousemove', (e) => {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            
+            el.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+            follower.style.transform = 'scale(2)';
         });
+        
         el.addEventListener('mouseleave', () => {
-            follower.style.transform = follower.style.transform.replace(' scale(2)', '');
-            follower.style.backgroundColor = 'rgba(124, 108, 255, 0.05)';
+            el.style.transform = `translate(0px, 0px)`;
+            follower.style.transform = 'scale(1)';
         });
     });
 
@@ -63,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const nav = document.querySelector('.glass-nav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 100) {
-            nav.style.width = '70%';
+            nav.style.width = window.innerWidth > 768 ? '70%' : '95%';
             nav.style.padding = '10px 24px';
             nav.style.background = 'rgba(10, 10, 12, 0.9)';
         } else {
-            nav.style.width = '90%';
+            nav.style.width = window.innerWidth > 768 ? '90%' : '95%';
             nav.style.padding = '12px 30px';
             nav.style.background = 'rgba(10, 10, 12, 0.7)';
         }
