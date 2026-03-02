@@ -230,7 +230,8 @@ app.get("/elements", (req, res) => {
     ];
 
     const lockedElements = [
-        { src: "/Assets/Elements/locked_elements/buy_now_button.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/bell_icon.png", locked: true },
+        { src: "/Assets/Elements/locked_elements/cart.png", locked: true },
         { src: "/Assets/Elements/locked_elements/hamburger.png", locked: true },
         { src: "/Assets/Elements/locked_elements/slider.png", locked: true },
         { src: "/Assets/Elements/locked_elements/wishlist.png", locked: true },
