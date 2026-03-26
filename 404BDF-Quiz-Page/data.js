@@ -1,4 +1,4 @@
-{
+const QUIZ_DATA = {
   "quiz_title": "UI/UX Scenario Based Quiz",
   "total_questions": 160,
   "questions": [
@@ -2083,4 +2083,4 @@
       "answer": "40"
     }
   ]
-}
+};
