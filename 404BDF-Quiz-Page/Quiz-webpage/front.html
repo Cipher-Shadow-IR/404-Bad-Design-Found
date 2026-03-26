@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UI/UX Quiz</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+}
+
+/* TITLE */
+h1 {
+  text-align: center;
+  padding: 20px;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+/* CARD */
+.card {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  transition: 0.3s;
+}
+
+.card:hover {
+  border-color: #3b82f6;
+}
+
+/* QUESTION */
+.q-title {
+  margin-bottom: 10px;
+}
+
+/* OPTIONS */
+.option {
+  display: block;
+  background: #0f172a;
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: #3b82f6;
+}
+
+.correct {
+  background: #22c55e !important;
+}
+
+.wrong {
+  background: #ef4444 !important;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>UI/UX Quiz - 160 Questions</h1>
+
+<div class="grid" id="grid"></div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
