@@ -127,6 +127,7 @@ h2.question-text {
     min-height: 2.6em;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: calc();
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
