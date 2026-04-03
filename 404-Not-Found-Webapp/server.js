@@ -268,7 +268,6 @@ const mediumPool = allQuestions.filter(q => q.level === "medium");
 const hardPool = allQuestions.filter(q => q.level === "hard" || q.level === "advanced");
 
 const puzzleImages = [
-    "/Assets/Puzzles/BurningCar.jpeg",
     "/Assets/Puzzles/NYTrain.jpeg",
     "/Assets/Puzzles/NightmareDrawing.jpeg",
     "/Assets/Puzzles/Paris.jpeg",
