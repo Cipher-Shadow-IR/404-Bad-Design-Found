@@ -57,7 +57,7 @@ npm install
 node server.js
 ```
 
-> Admin Dashboard starts at **http://localhost:4000**
+> Admin Dashboard starts at **http://10.1.27.206:4000**
 
 ---
 

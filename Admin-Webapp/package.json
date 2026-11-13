@@ -1,16 +1,20 @@
 {
-    "name": "admin-webapp",
-    "version": "1.0.0",
-    "description": "Admin Dashboard for 404: Bad Design Found — Event Management Panel",
-    "main": "server.js",
-    "scripts": {
-        "start": "node server.js",
-        "dev": "nodemon server.js"
-    },
-    "dependencies": {
-        "cors": "^2.8.5",
-        "express": "^4.21.2",
-        "nodemon": "^3.1.13",
-        "sqlite3": "^5.1.7"
-    }
+  "name": "admin-webapp",
+  "version": "1.0.0",
+  "description": "Admin Dashboard for 404: Bad Design Found — Event Management Panel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
 }

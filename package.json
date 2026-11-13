@@ -1,0 +1,28 @@
+{
+  "name": "404-bad-design-found-ecosystem",
+  "version": "2.0.0",
+  "description": "404: Bad Design Found — Full Stack UI/UX Antipattern Challenge Ecosystem for Vercel & Neon Postgres",
+  "main": "api/index.js",
+  "scripts": {
+    "build": "node -e \"console.log('Build check passed: no compile step required for Vanilla JS/Express/Neon.')\"",
+    "start": "node 404-Not-Found-Webapp/server.js",
+    "dev": "nodemon 404-Not-Found-Webapp/server.js",
+    "test:neon": "node test-neon.js",
+    "test:e2e": "node test-e2e.js"
+  },
+  "dependencies": {
+    "@neon/config": "^1.10.0",
+    "@neon/env": "^1.6.8",
+    "@neondatabase/serverless": "^1.2.0",
+    "body-parser": "^2.4.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}

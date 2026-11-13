@@ -1,3 +1,8 @@
 node_modules/
-404-Not-Found-Webapp/public/db.sqlite
-Admin-Webapp/public/db.sqlite
+*.sqlite
+*.sqlite3
+404-Not-Found-Webapp/db.sqlite
+.env
+.env.local
+.vercel
+.neon

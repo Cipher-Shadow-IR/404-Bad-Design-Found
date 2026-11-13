@@ -117,6 +117,6 @@ app.get("/", (req, res) => {
 // ====== START SERVER ======
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Admin Dashboard running on http://localhost:${PORT}`);
+    console.log(`🚀 Admin Dashboard running on http://10.1.27.206:${PORT}`);
     console.log(`📡 Fetching data from game server at ${GAME_API}`);
 });

@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/Admin-Webapp/index.html"
+    },
+    {
+      "source": "/admin/:match*",
+      "destination": "/Admin-Webapp/:match*"
+    },
+    {
+      "source": "/(Auth/.*|Main/.*|Assets/.*|Quizzes/.*)",
+      "destination": "/404-Not-Found-Webapp/public/$1"
+    },
+    {
+      "source": "/(login|team-status/.*|elements|quiz/.*|draft.*|cheat|submit|admin/login|admin/verify|admin/teams|admin/submissions|admin/stats)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/",
+      "destination": "/404BDF-Landing-Page/index.html"
+    },
+    {
+      "source": "/:match*",
+      "destination": "/404BDF-Landing-Page/:match*"
+    }
+  ]
+}
